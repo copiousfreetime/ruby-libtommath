@@ -129,7 +129,7 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
             }
             break;
         default:
-            rb_raise(rb_eTypeError, "Unable to create Bignum from %s", StringValuePtr(arg));
+            rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
             break;
         }
         return self;
@@ -140,7 +140,7 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
 }
 
 /**
- * Copy intializer used by dup and clonew
+ * Copy initializer used by dup and clonew
  */
 static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
 {
@@ -148,7 +148,6 @@ static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
     mp_int *m_copy;
     int mp_result;
 
-    printf("Initialize copy of Bignum\n");
     if (copy == orig) {
         return copy;
     }
@@ -178,7 +177,7 @@ void Init_libtommath()
     /* exception definition */
     eLT_M_Error = rb_define_class_under(mLT_M,"LTMathError",rb_eStandardError);
 
-    /* class Bignum definition */
+    /* class Bignum definition, same as :;Bignum  the builtin class */
     cLT_M_Bignum = rb_define_class_under(mLT_M,"Bignum",rb_cObject);
     rb_define_alloc_func(cLT_M_Bignum,ltm_bignum_alloc);
     rb_define_method(cLT_M_Bignum,"initialize",ltm_bignum_initialize,-1);
@@ -214,5 +213,24 @@ void Init_libtommath()
        rb_define_method(cLT_M_Bignum, "to_f",       ltm_bignum_to_f, 0);
        rb_define_method(cLT_M_Bignum, "abs",        ltm_bignum_abs, 0);
        rb_define_method(cLT_M_Bignum, "size",       ltm_bignum_size, 0);
+     */
+
+    /* additional methods that are provided by libtommath */
+    /* Prime number methods */
+    /* prime is divisible
+     * fermat test
+     * miller-rabin test
+     * is_prime?
+     * next_prime
+     * random_prime
+     * generate_prime (mp_prime_random_ex)
+     */
+
+    /*
+     * extended euclidian
+     * greatest common divisor
+     * least common multiple
+     * jacobi symbol
+     * modular inverse
      */
 }
