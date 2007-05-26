@@ -129,7 +129,6 @@ static VALUE ltm_bignum_plus(VALUE self, VALUE other)
     c = MP_INT(result);
 
     if (MP_OKAY != (mp_result = mp_add(a,b,c))) {
-        printf("failure to add %s\n", mp_error_to_string(mp_result));
         rb_raise(eLT_M_Error,"Failure to add two Bignums: %s", 
                 mp_error_to_string(mp_result));
     }
@@ -332,7 +331,7 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
     /* if arg is Fixnum or a Real then we convert to a ulong and
      * then set the sign as appropriate
      */
-        from_val = FIX2LONG(arg);
+        from_val = NUM2LONG(arg);
         if (MP_OKAY != (mp_result = mp_init_set_int(bn,(unsigned long)from_val))) {
             rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
         }

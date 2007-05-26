@@ -76,6 +76,21 @@ describe LibTom::Math::Bignum, "conversions" do
     it "should have Numeric as an ancestor" do
         @bn.class.ancestors.should include(Numeric)
     end
+
+    it "should convert an Integer to Bignum correctly" do
+        c = LibTom::Math::Bignum.new(42)
+        c.should == 42
+    end
+    
+    it "should convert a ::Bignum to Bignum correctly" do
+        c = LibTom::Math::Bignum.new(9876543210987654321)
+        c.should == 9876543210987654321
+    end
+
+    it "should convert a Float to Bignum correctly" do
+        c = LibTom::Math::Bignum.new(42.42)
+        c.should == 42
+    end
 end
 
 describe LibTom::Math::Bignum, "object / class comparisons" do
@@ -199,5 +214,43 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
         c.should be_an_instance_of(LibTom::Math::Bignum)
     end
 
+    it "should add with a Float and produce the right sum (bignum + float)" do
+        c = @a + 42.42
+        c.should == 1234567890987654363
+    end
+    
+    it "should add with a Float and produce the right sum (float + bignum)" do
+        c = 42.42 + @a
+        c.should == 1234567890987654363
+    end
 
+    it "should add with a Float and produce a Bignum (bignum + float)" do 
+        c = @a + 42.42
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+    
+    it "should add with a Float and produce a Bignum (float + bignum)" do 
+        c = 42.42 + @a
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+    
+    it "should subtract with a Float and produce the right difference (bignum - float)" do
+        c = @a - 21.52
+        c.should == LibTom::Math::Bignum.new(1234567890987654300)
+    end
+    
+    it "should subtract with a Float and produce the right difference (float - bignum)" do
+        c = 21.52 - @a
+        c.should == -1234567890987654300
+    end
+
+    it "should subtract with a Float and produce a Bignum (bignum - float)" do
+        c = @a - 21.52
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+ 
+    it "should subtract with a Float and produce a Bignum (float - bignum)" do
+        c = 21.52 - @a
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
 end
