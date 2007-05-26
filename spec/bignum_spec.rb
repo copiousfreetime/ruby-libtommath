@@ -168,7 +168,47 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
         c = @a + @b
         c.should == 11111111101111111110
     end
+ 
+    it "should add with a ::Bignum and produce the correct sum (bignum + ::bignum)" do
+        c = @a + 9876543210123456789
+        c.should == 11111111101111111110
+    end
     
+    it "should add with a ::Bignum and produce the correct sum (::bignum + bignum)" do
+        c =  9876543210123456789 + @a
+        c.should == 11111111101111111110
+    end
+    
+    it "should add with a ::Bignum and produce a Bignum (bignum + ::bignum)" do
+        c =  @a + 9876543210123456789 
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+    
+    it "should add with a ::Bignum and produce a Bignum (::bignum + bignum)" do
+        c =  9876543210123456789 + @a
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+ 
+    it "should subtract with a ::Bignum and produce the correct difference (bignum - ::bignum)" do
+        c = @a - 9876543210123456789
+        c.should == -8641975319135802468
+    end
+    
+    it "should subtract with a ::Bignum and produce the correct difference (::bignum - bignum)" do
+        c = 9876543210123456789 - @a
+        c.should == 8641975319135802468
+    end
+
+    it "should subtract with a ::Bignum and produce a Bignum (bignum - ::bignum)" do
+        c =  @a - 9876543210123456789 
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+    
+    it "should subtract with a ::Bignum and produce a Bignum (::bignum - bignum)" do
+        c = 9876543210123456789 - @a
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+  
     it "should add with an Integer and produce the correct sum (bignum + int) " do
         c = @a + 9
         c.should == 1234567890987654330
