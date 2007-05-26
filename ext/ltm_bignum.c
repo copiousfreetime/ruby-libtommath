@@ -1,5 +1,6 @@
 #include "ruby.h"
 #include <tommath.h> 
+#include <math.h>
 
 /**********************************************************************
  *                             Prototypes                             *
@@ -420,7 +421,7 @@ static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
  * call-seq:
  *   bignum / bignum
  *
- * returns the division of a * b
+ * returns the division of a / b
  */
 static VALUE ltm_bignum_divide(VALUE self, VALUE other)
 {
@@ -462,6 +463,180 @@ static VALUE ltm_bignum_divide(VALUE self, VALUE other)
     }
 
     return result;
+}
+
+
+/*
+ * call-seq:
+ *   a.remainder(b)
+ *
+ * returns the remainder of the division of a / b
+ */
+static VALUE ltm_bignum_remainder(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+    mp_int *c;
+
+    VALUE result = ALLOC_LTM_BIGNUM;
+    int mp_result = MP_OKAY;
+    
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+
+    c = MP_INT(result);
+    if (MP_OKAY != (mp_result = mp_div(a,b,NULL,c))) {
+        if (MP_VAL == mp_result) {
+            rb_raise(rb_eZeroDivError,"divide by 0");
+        }
+        rb_raise(eLT_M_Error,"Failure to divide Bignums: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *   bignum % bignum
+ *
+ * returns the result of a % b
+ */
+static VALUE ltm_bignum_modulo(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+    mp_int *c;
+
+    VALUE result = ALLOC_LTM_BIGNUM;
+    int mp_result = MP_OKAY;
+    
+    c = MP_INT(result);
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+
+    if (MP_OKAY != (mp_result = mp_mod(a,b,c))) {
+        if (MP_VAL == mp_result) {
+            rb_raise(rb_eZeroDivError,"divide by 0");
+        }
+        rb_raise(eLT_M_Error,"Failure to modulo Bignum: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+/*
+ * call-seq:
+ *   a.divmod(b) => [ a.div(b), a.mod(b) ]
+ *
+ * returns an array holding [ a.div(b), a.mod(b) ]
+ */
+static VALUE ltm_bignum_divmod(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+
+    VALUE div = ALLOC_LTM_BIGNUM;
+    VALUE mod = ALLOC_LTM_BIGNUM;
+
+    mp_int *m_div= MP_INT(div);
+    mp_int *m_mod = MP_INT(mod);
+
+    int mp_result = MP_OKAY;
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+    /* calc div */
+    if (MP_OKAY != (mp_result = mp_div(a,b,m_div,NULL))) {
+        if (MP_VAL == mp_result) {
+            rb_raise(rb_eZeroDivError,"divide by 0");
+        }
+        rb_raise(eLT_M_Error,"Failure to divmod Bignum: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+
+    /* calc mod */
+    if (MP_OKAY != (mp_result = mp_mod(a,b,m_mod))) {
+        if (MP_VAL == mp_result) {
+            rb_raise(rb_eZeroDivError,"divide by 0");
+        }
+        rb_raise(eLT_M_Error,"Failure to divmod Bignum: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return rb_ary_new3(2,div,mod);
+}
+
+/*
+ * call-seq:
+ *  a.size -> number of bytes in machine representation
+ *
+ *  This always has an extra byte on the front, 0 byte for positive #'s
+ *  1 byte for negative numbers.  This also does not pad to the nearest
+ *  word size.
+ */
+
+static VALUE ltm_bignum_size(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+    int size = mp_signed_bin_size(a);
+    return INT2FIX(size);
+}
+
+
+/*
+ * call-seq
+ *  a.to_f -> float
+ *
+ *  returns the floating point value of the bignum, if it is larger than
+ *  can be represented, Infinity is returned.
+ */
+static VALUE ltm_bignum_to_f(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+
+    VALUE tmp_float;
+    VALUE tmp_string;
+    double f = HUGE_VAL; /* assume that self is > Float::MAX */
+
+    int mp_result;
+    int mp_size;
+    char *mp_str;
+
+    /* do an endrun around the issue, convert ourselves to a string and
+     * then convert the string to a float
+     */
+    if (MP_OKAY != (mp_result = mp_radix_size(a,10,&mp_size))) {
+        rb_raise(eLT_M_Error, "Unable to convert Bignum to Float: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    mp_str = ALLOC_N(char,mp_size);
+    if (MP_OKAY != (mp_result = mp_toradix(a,mp_str,10))) {
+        rb_raise(eLT_M_Error, "Unable to convert Bignum to Float: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    tmp_string = rb_str_new2(mp_str); 
+    free(mp_str);
+
+    tmp_float =  rb_funcall(tmp_string,rb_intern("to_f"),0);
+    f = NUM2DBL(tmp_float);
+    return rb_float_new(f);
 }
 
 
@@ -512,6 +687,8 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
 {
     mp_int *bn;
     VALUE arg;
+    VALUE arg2;
+    VALUE arg_tmp;
     unsigned long from_val = 0L;
     long signed_val = 0;
     int radix = 10;
@@ -531,15 +708,46 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
         break;
     }
 
-    Data_Get_Struct(self,mp_int,bn);
+    /* first pass, everything is converted to a ::bignum or an integer
+     * */
     switch (TYPE(arg)) {
     case T_FIXNUM:
+    case T_STRING:
+        /* fixnums and strings are okay, they fall through to the 2nd pass */
+        arg2 = arg;
+        break;
     case T_FLOAT:
-    /* if arg is Fixnum or a Real then we convert to a ulong and
-     * then set the sign as appropriate
-     */
+        /* Just call .to_i on the float and then to_s if it was convertd
+         * to a ::Bignum
+         */
+        arg_tmp = rb_funcall(arg,rb_intern("to_i"),0);
+        if (TYPE(arg_tmp) == T_BIGNUM) {
+            arg2 = rb_funcall(arg_tmp,rb_intern("to_s"),0);
+        } else {
+            arg2 = arg_tmp;
+        }
+        break;
 
-        signed_val = NUM2LONG(arg);
+    case T_BIGNUM:
+        /* bignums get converted to strings which we will read in on the
+         * 2nd pass
+         */
+        arg2 = rb_funcall(arg,rb_intern("to_s"),0);
+        break;
+    default:
+        rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
+        break;
+
+    }
+
+    /* second pass, everything is either a T_STRING or a T_FIXNUM */
+    Data_Get_Struct(self,mp_int,bn);
+    switch (TYPE(arg2)) {
+    case T_FIXNUM:
+        /* if arg2 is Fixnum then we convert to a ulong and then set the sign
+         * as appropriate
+         */
+        signed_val = NUM2LONG(arg2);
         from_val   = (signed_val < 0) ? (-signed_val) : (signed_val);
         if (MP_OKAY != (mp_result = mp_init_set_int(bn,(unsigned long)from_val))) {
             rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
@@ -548,21 +756,16 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
             mp_neg(bn,bn);
         }
         break;
-    case T_BIGNUM:
-        /** convert a bignum to a string and set arg = to the string
-         * and fall through to the string conversion
-         */
-         arg = rb_funcall(arg,rb_intern("to_s"),0);
     case T_STRING:
-        /* if arg is a string then assume that 
-         * it is a number and convert it as such
+        /* if arg is a string then assume that it is a number and
+         * convert it as such
          */
-        if (MP_OKAY != (mp_result = mp_read_radix(bn,RSTRING(arg)->ptr,radix))) {
+        if (MP_OKAY != (mp_result = mp_read_radix(bn,RSTRING(arg2)->ptr,radix))) {
             rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
         }
         break;
     default:
-        rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
+        rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg2));
         break;
     }
     return self;
@@ -617,36 +820,42 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum, "eql?",ltm_bignum_eql, 1);
 
     /* mathematical operators */
-    rb_define_method(cLT_M_Bignum,"coerce",ltm_bignum_coerce, 1);
-    rb_define_method(cLT_M_Bignum, "-@",ltm_bignum_uminus, 0);
-    rb_define_method(cLT_M_Bignum, "abs",ltm_bignum_abs, 0);
-    rb_define_method(cLT_M_Bignum, "+",ltm_bignum_add, 1);
-    rb_define_method(cLT_M_Bignum, "-",ltm_bignum_subtract, 1);
-    rb_define_method(cLT_M_Bignum, "*",ltm_bignum_multiply, 1);
-    rb_define_method(cLT_M_Bignum, "/",ltm_bignum_divide, 1);
-    rb_define_method(cLT_M_Bignum, "quo",ltm_bignum_divide, 1);
-    rb_define_method(cLT_M_Bignum, "div",ltm_bignum_divide, 1);
-
-
-    /** Ruby Built int BigNum operators **/
+    rb_define_method(cLT_M_Bignum,"coerce", ltm_bignum_coerce, 1);
+    rb_define_method(cLT_M_Bignum, "-@", ltm_bignum_uminus, 0);
+    rb_define_method(cLT_M_Bignum, "abs", ltm_bignum_abs, 0);
+    rb_define_method(cLT_M_Bignum, "+", ltm_bignum_add, 1);
+    rb_define_method(cLT_M_Bignum, "-", ltm_bignum_subtract, 1);
+    rb_define_method(cLT_M_Bignum, "*", ltm_bignum_multiply, 1);
+    rb_define_method(cLT_M_Bignum, "/", ltm_bignum_divide, 1);
+    rb_define_method(cLT_M_Bignum, "quo", ltm_bignum_divide, 1);
+    rb_define_method(cLT_M_Bignum, "div", ltm_bignum_divide, 1);
+    rb_define_method(cLT_M_Bignum, "remainder",ltm_bignum_remainder, 1);
+    rb_define_method(cLT_M_Bignum, "%", ltm_bignum_modulo, 1);
+    rb_define_method(cLT_M_Bignum, "modulo",ltm_bignum_modulo, 1);
+    rb_define_method(cLT_M_Bignum, "divmod",ltm_bignum_divmod, 1);
+    /*rb_define_method(cLT_M_Bignum, "**",ltm_bignum_pow, 1);
+     * */
+ 
+    /* utility methods */
+    rb_define_method(cLT_M_Bignum, "size",ltm_bignum_size, 0);
+    rb_define_method(cLT_M_Bignum, "to_f",ltm_bignum_to_f, 0);
     /*
-       rb_define_method(cLT_M_Bignum, "%",          ltm_bignum_modulo, 1);
-       rb_define_method(cLT_M_Bignum, "modulo",     ltm_bignum_modulo, 1);
-       rb_define_method(cLT_M_Bignum, "divmod",     ltm_bignum_divmod, 1);
-       rb_define_method(cLT_M_Bignum, "remainder",  ltm_bignum_remainder, 1);
-       rb_define_method(cLT_M_Bignum, "**",         ltm_bignum_pow, 1);
-       rb_define_method(cLT_M_Bignum, "&",          ltm_bignum_and, 1);
+       rb_define_method(cLT_M_Bignum, "<=>",        ltm_bignum_cmp, 1);
+       rb_define_method(cLT_M_Bignum, "hash",       ltm_bignum_hash, 0);
+       rb_define_mothod(cLT_M_Bignum, "nonzero?",   ltm_bignum_nonzero,0);
+    */
+
+    /* logical / bitwise  operators */
+    /*
+      rb_define_method(cLT_M_Bignum, "&",          ltm_bignum_and, 1);
        rb_define_method(cLT_M_Bignum, "|",          ltm_bignum_or, 1);
        rb_define_method(cLT_M_Bignum, "^",          ltm_bignum_xor, 1);
        rb_define_method(cLT_M_Bignum, "~",          ltm_bignum_neg, 0);
        rb_define_method(cLT_M_Bignum, "<<",         ltm_bignum_lshift, 1);
        rb_define_method(cLT_M_Bignum, ">>",         ltm_bignum_rshift, 1);
        rb_define_method(cLT_M_Bignum, "[]",         ltm_bignum_aref, 1);
-       rb_define_method(cLT_M_Bignum, "<=>",        ltm_bignum_cmp, 1);
-       rb_define_method(cLT_M_Bignum, "hash",       ltm_bignum_hash, 0);
-       rb_define_method(cLT_M_Bignum, "to_f",       ltm_bignum_to_f, 0);
-       rb_define_method(cLT_M_Bignum, "size",       ltm_bignum_size, 0);
      */
+
 
     /* additional methods that are provided by libtommath */
     /* Prime number methods */

@@ -225,8 +225,20 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
                                           [@other, LibTom::Math::Bignum.new(-42424242424242424242), [ 0, -34 ]],
                                           [@other, LibTom::Math::Bignum.new(2),[617283945493827160,0]],
                                           [@other, LibTom::Math::Bignum.new(-2),[-617283945493827160,0]]]
-               }
- 
+               },
+        "%" => { Float => [ [@other, 42.42, [21, 42]],
+                            [@other, -42.42, [-21, 1234567890987654279]],
+                          ],
+                 Integer => [ [@other, 42, [21, 42]],
+                              [@other, -42, [-21, 1234567890987654279]]
+                            ],
+                 Bignum => [[@other,42424242424242424242,[1234567890987654321,448934130662177328]],
+                            [@other,-42424242424242424242, [-41189674533254769921, 785633760325476993]]
+                            ],
+                 LibTom::Math::Bignum=> [[@other,LibTom::Math::Bignum.new(42424242424242424242),[1234567890987654321,448934130662177328]],
+                                         [@other,LibTom::Math::Bignum.new(-42424242424242424242), [-41189674533254769921, 785633760325476993]]
+                            ],
+               },
     }
     answers.each_pair do |op,op_suite|
         op_suite.each do |klass,klass_suite|
@@ -245,5 +257,60 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
                 end
             end
         end
+    end
+
+    it "should perform divmod correctly - all pos " do
+        @a.divmod(42).should == [29394473594944150, 21]
+    end
+    
+    it "should perform divmod correctly - param neg " do
+        @a.divmod(-42).should == [-29394473594944150, -21]
+    end
+    
+    it "should perform divmod correctly - self neg " do
+        (-@a).divmod(42).should == [-29394473594944150, 21]
+    end
+    
+    it "should perform divmod correctly - both neg " do
+        (-@a).divmod(-42).should == [29394473594944150, -21]
+    end
+
+    it "should perform remainder correctly - all pos" do
+        @a.remainder(42).should == 21
+    end
+    
+    it "should perform remainder correctly - param neg " do
+        @a.remainder(42).should == 21
+    end
+    
+    it "should perform remainder correctly - self neg " do
+        (-@a).remainder(42).should == -21
+    end
+    
+    it "should perform remainder correctly - both neg " do
+        (-@a).remainder(-42).should == -21
+    end
+end
+
+describe LibTom::Math::Bignum, "utility operations" do
+    before(:each) do
+        @a = LibTom::Math::Bignum.new(1234567890987654321)
+        @b = LibTom::Math::Bignum.new(9876543210123456789)
+        @float = 1234567890987654321.to_f
+    end
+
+    [[10,11],[20,21],[100,101]].each do |power,bytes|
+        it "should say how many bytes the machine representation is - #{bytes}" do
+            a = LibTom::Math::Bignum.new((256**power - 1))
+            a.size.should == bytes
+        end
+    end
+
+    it "should convert to a Float (positive num)" do
+        @a.to_f.should == @float
+    end
+
+    it "should convert to a Float (negative num)" do
+        (-@a).to_f.should == -@float
     end
 end
