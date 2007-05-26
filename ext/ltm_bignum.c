@@ -29,6 +29,7 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other);
  **********************************************************************/
 
 #define MP_INT(obj) (value_to_mp_int(obj))
+#define MP_CHAR_SIGN(mp) ((SIGN(mp)==MP_ZPOS)?('+'):('-'))
 #define IS_LTM_BIGNUM(obj) (Qtrue == rb_obj_is_instance_of(obj,cLT_M_Bignum))
 #define ALLOC_LTM_BIGNUM (ltm_bignum_alloc(cLT_M_Bignum))
 #define NEW_LTM_BIGNUM_FROM(other) (rb_class_new_instance(1,&other,cLT_M_Bignum))
@@ -38,6 +39,27 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other);
  *                     Internally used functions                      *
  **********************************************************************/
 
+#if 1
+/*
+ *   This is only used in debugging
+ */
+char * mp_int_to_s(mp_int *a)
+{   
+    int mp_size,mp_result;
+    char *mp_str;
+    if (MP_OKAY != (mp_result = mp_radix_size(a,10,&mp_size))) {
+        rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
+    }
+
+    mp_str = ALLOC_N(char,mp_size);
+    if (MP_OKAY != (mp_result = mp_toradix(a,mp_str,10))) {
+        rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
+    }
+
+    return mp_str;
+}
+#endif
+ 
 /*
  * See if the given Value has the integer value 2
  */
@@ -68,7 +90,10 @@ static VALUE is_2(VALUE obj)
                  * to allocate space for a string to hold the number
                  */
                 if (2 == digit_count) {
-                    val = (unsigned long)mp_get_int(a);
+                    val = (int)mp_get_int(a);
+                    if (SIGN(a) == MP_NEG) {
+                        val = -val;
+                    }
                 }
             }
         }
@@ -370,7 +395,7 @@ static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
                 mp_error_to_string(mp_result));
         }
     } else {
-        /* other is not 2, so use the normal multiplier */
+        /* both of the operands are is not 2, so use the normal multiplier */
         mp_int *b;
 
         a = MP_INT(self);
@@ -389,6 +414,57 @@ static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
 
     return result;
 }
+
+
+/*
+ * call-seq:
+ *   bignum / bignum
+ *
+ * returns the division of a * b
+ */
+static VALUE ltm_bignum_divide(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *c;
+
+    VALUE result = ALLOC_LTM_BIGNUM;
+    int mp_result = MP_OKAY;
+    
+    c = MP_INT(result);
+
+    /* first find out if one of the values is a 2 or not.  Then we can use the fast
+     * divisor
+     */
+    if (IS_2(other)) {
+        if (MP_OKAY != (mp_result = mp_div_2(a,c))) {
+            rb_raise(eLT_M_Error,"Failure to divide Bignums: %s", 
+                mp_error_to_string(mp_result));
+        }
+    } else {
+        /* both of the operands are not 2, so use the normal divisor */
+        mp_int *b;
+
+        a = MP_INT(self);
+
+        if (IS_LTM_BIGNUM(other)) {
+            b = MP_INT(other);
+        } else {
+            b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+        }
+
+        if (MP_OKAY != (mp_result = mp_div(a,b,c,NULL))) {
+            if (MP_VAL == mp_result) {
+                rb_raise(rb_eZeroDivError,"divide by 0");
+            }
+            rb_raise(eLT_M_Error,"Failure to divide Bignums: %s", 
+                    mp_error_to_string(mp_result));
+        }
+    }
+
+    return result;
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -436,7 +512,8 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
 {
     mp_int *bn;
     VALUE arg;
-    long from_val = 0L;
+    unsigned long from_val = 0L;
+    long signed_val = 0;
     int radix = 10;
     int mp_result = 0;
 
@@ -461,11 +538,13 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
     /* if arg is Fixnum or a Real then we convert to a ulong and
      * then set the sign as appropriate
      */
-        from_val = NUM2LONG(arg);
+
+        signed_val = NUM2LONG(arg);
+        from_val   = (signed_val < 0) ? (-signed_val) : (signed_val);
         if (MP_OKAY != (mp_result = mp_init_set_int(bn,(unsigned long)from_val))) {
             rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
         }
-        if (from_val < 0) {
+        if (signed_val < 0) {
             mp_neg(bn,bn);
         }
         break;
@@ -544,18 +623,17 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum, "+",ltm_bignum_add, 1);
     rb_define_method(cLT_M_Bignum, "-",ltm_bignum_subtract, 1);
     rb_define_method(cLT_M_Bignum, "*",ltm_bignum_multiply, 1);
-    rb_define_method(cLT_M_Bignum, "is_2?",is_2, 0);
+    rb_define_method(cLT_M_Bignum, "/",ltm_bignum_divide, 1);
+    rb_define_method(cLT_M_Bignum, "quo",ltm_bignum_divide, 1);
+    rb_define_method(cLT_M_Bignum, "div",ltm_bignum_divide, 1);
 
 
     /** Ruby Built int BigNum operators **/
     /*
-       rb_define_method(cLT_M_Bignum, "/",          ltm_bignum_div, 1);
        rb_define_method(cLT_M_Bignum, "%",          ltm_bignum_modulo, 1);
-       rb_define_method(cLT_M_Bignum, "div",        ltm_bignum_div, 1);
-       rb_define_method(cLT_M_Bignum, "divmod",     ltm_bignum_divmod, 1);
        rb_define_method(cLT_M_Bignum, "modulo",     ltm_bignum_modulo, 1);
+       rb_define_method(cLT_M_Bignum, "divmod",     ltm_bignum_divmod, 1);
        rb_define_method(cLT_M_Bignum, "remainder",  ltm_bignum_remainder, 1);
-       rb_define_method(cLT_M_Bignum, "quo",        ltm_bignum_quo, 1);
        rb_define_method(cLT_M_Bignum, "**",         ltm_bignum_pow, 1);
        rb_define_method(cLT_M_Bignum, "&",          ltm_bignum_and, 1);
        rb_define_method(cLT_M_Bignum, "|",          ltm_bignum_or, 1);
