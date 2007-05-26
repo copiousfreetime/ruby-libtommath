@@ -72,6 +72,10 @@ describe LibTom::Math::Bignum, "conversions" do
         b = LibTom::Math::Bignum.new("rubyrules",64)
         b.to_s(64).should == "rubyrules"
     end
+
+    it "should have Numeric as an ancestor" do
+        @bn.class.ancestors.should include(Numeric)
+    end
 end
 
 describe LibTom::Math::Bignum, "object / class comparisons" do
@@ -135,8 +139,65 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
         @b = LibTom::Math::Bignum.new(9876543210123456789)
     end
 
-    it "should add correctly" do
-        c = @a - @b
+    it "should negate correctly" do 
+        c = -@a
+        c.should == -1234567890987654321
+    end
+
+    it "should have a correct absolute value" do
+        c = -@a
+        c.abs.should == @a
+    end
+
+    it "should add with a Bignum and produce the correct sum" do
+        c = @a + @b
         c.should == 11111111101111111110
     end
+    
+    it "should add with an Integer and produce the correct sum (bignum + int) " do
+        c = @a + 9
+        c.should == 1234567890987654330
+    end
+    
+    it "should add with an Integer and produce the correct sum (int + bignum) " do
+        c = 9 + @a 
+        c.should == 1234567890987654330
+    end
+    
+    it "should add with an Integer and produce a Bignum (bignum + int)" do
+        c = @a + 9
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+    
+    it "should add with an Integer and produce a Bignum (int + bignum)" do
+        c = 9 + @a 
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+
+    it "should subtract with a Bignum and produce the correct difference" do
+        c = @a - @b
+        c.should == -8641975319135802468
+    end
+
+    it "should subtract with an Integer and produce the correct difference (int - bignum)" do
+        c = 54321 - LibTom::Math::Bignum.new(321)
+        c.should == 54000
+    end
+    
+    it "should subtract with an Integer and produce a Bignum (int - bignum)" do
+        c = 54321 - LibTom::Math::Bignum.new(321)
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+    
+    it "should subtract with an Integer and produce the correct difference (bignum - int)" do
+        c = @a - 54321
+        c.should == 1234567890987600000
+    end
+    
+    it "should subtract with an Integer and produce a Bignum (bignum - int)" do
+        c = @a - 54321
+        c.should be_an_instance_of(LibTom::Math::Bignum)
+    end
+
+
 end
