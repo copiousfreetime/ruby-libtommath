@@ -9,8 +9,116 @@ static VALUE eLT_M_Error;
 static void ltm_bignum_free(mp_int *bn);
 static VALUE ltm_bignum_alloc(VALUE klass);
 static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self);
+static mp_int* value_to_mp_int(VALUE obj);
+#define LTM_BIGNUM(obj) (value_to_mp_int(obj))
+#define IS_LTM_BIGNUM(obj) (Qtrue == rb_obj_is_instance_of(obj,cLT_M_Bignum))
+
+    
+/*
+ * Convert a VALUE into the internal struct we use for libtommmath
+ */
+static mp_int* value_to_mp_int(VALUE obj)
+{
+    mp_int* bn;
+
+    if (IS_LTM_BIGNUM(obj)) {
+        Data_Get_Struct(obj,mp_int,bn);
+    } else {
+        rb_raise(rb_eTypeError,"wrong type");
+    }
+    return bn;
+}
 
 
+/*
+ * Numeric coercion protocol.
+ */
+static VALUE ltm_bignum_coerce(VALUE self, VALUE other)
+{
+    VALUE result = rb_ary_new2(2);
+    VALUE param;
+    VALUE receiver;
+
+    switch (TYPE(other)) {
+        case T_FIXNUM:
+        case T_BIGNUM:
+        case T_FLOAT:
+            param = rb_class_new_instance(1,&other,cLT_M_Bignum);
+            receiver = self;
+            break;
+            /* FIXME
+        case T_FLOAT:
+            param = other;
+            receiver = ltm_bignum_to_float(LTM_BIGNUM(self));
+            break
+            */
+        default:
+            rb_raise(rb_eTypeError, "can't coerce %s to LTMBignum",
+                    rb_obj_classname(other));
+            break; 
+    }
+
+    rb_ary_push(result,param);
+    rb_ary_push(result,receiver);
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  Bignum == obj  => true or false
+ *
+ * Returns true only if obj has the same value as Bignum.  This converts
+ * non LTMBignum's to LTMBignums and does the comparison that way.
+ */
+static VALUE ltm_bignum_eq(VALUE self, VALUE other)
+{
+    mp_int *a; 
+    mp_int *b;  
+    VALUE param;
+
+    a = LTM_BIGNUM(self);
+
+    if (IS_LTM_BIGNUM(other)) {
+        param = other;
+    } else {
+        param = rb_class_new_instance(1,&other,cLT_M_Bignum);
+    }
+
+    b = LTM_BIGNUM(param);
+
+    if (MP_EQ == mp_cmp(a,b)) {
+        return Qtrue;
+    } 
+    return Qfalse;
+}
+
+
+/*
+ * call-seq:
+ *  Bignum.eql?(obj) => true or false
+ *
+ * Returns true only if obj is a Bignum and they are equivalent
+ */
+static VALUE ltm_bignum_eql(VALUE self, VALUE other)
+{
+    mp_int *a;
+    mp_int *b;
+
+    a = LTM_BIGNUM(self);
+    if (IS_LTM_BIGNUM(other)) {
+        b = LTM_BIGNUM(other);
+        if (MP_EQ == mp_cmp(a,b)) {
+            return Qtrue;
+        } 
+    }
+    return Qfalse;
+}
+
+
+/*
+ * garbage collector free method for mp_int structures
+ */
 static void ltm_bignum_free(mp_int *bn)
 {
     mp_clear(bn);
@@ -18,12 +126,17 @@ static void ltm_bignum_free(mp_int *bn)
     return ;
 }
 
+
+/*
+ * Allocator for mp_int structures
+ */
 static VALUE ltm_bignum_alloc(VALUE klass)
 {
     mp_int *bn = ALLOC(mp_int);
     VALUE  obj = Data_Wrap_Struct(cLT_M_Bignum,NULL,ltm_bignum_free,bn);
     return obj;
 }
+
 
 /**
  * call-seq:
@@ -51,7 +164,7 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
     }
 
     /* create a local string then convert it to an RSTRING */
-    Data_Get_Struct(self,mp_int,bn);
+    bn = LTM_BIGNUM(self);
     if (MP_OKAY != (mp_result = mp_radix_size(bn,radix,&mp_size))) {
         rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
     }
@@ -64,6 +177,7 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
     free(mp_str);
     return result;
 }
+
 
 /**
  * call-seq:
@@ -85,7 +199,6 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
     int mp_result = 0;
 
     /* require at least one argument */
-
     switch (argc) {
     case 0:
         rb_raise(rb_eArgError,"at least one argument is required");
@@ -134,13 +247,13 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
         }
         return self;
     } else {
-        printf("Not able to minit a bignum\n");
         rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
     }
 }
 
+
 /**
- * Copy initializer used by dup and clonew
+ * Copy initializer used by dup and clone
  */
 static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
 {
@@ -151,16 +264,11 @@ static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
     if (copy == orig) {
         return copy;
     }
-
-    /* copy can only be of the same type as orig */
-    if ((TYPE(orig) != T_DATA) || 
-            (RDATA(orig)->dfree != (RUBY_DATA_FUNC)ltm_bignum_free)) {
-        rb_raise(rb_eTypeError, "wrong argument type passed to copy.");
-    }
+    
+    m_orig = LTM_BIGNUM(orig);
+    m_copy = LTM_BIGNUM(copy);
 
     /* copy the internals using the mp_init_copy method to copy a bignum */
-    Data_Get_Struct(orig, mp_int, m_orig);
-    Data_Get_Struct(copy, mp_int, m_copy);
     if (MP_OKAY != (mp_result = mp_init_copy(m_copy,m_orig))) {
         rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
     }
@@ -168,6 +276,10 @@ static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
     return copy;
 }
 
+/*
+ * Library initialization.  Called when require 'libtom/math' is parsed
+ * in a ruby program.
+ */
 void Init_libtommath()
 {
     /* module definitions */
@@ -183,10 +295,12 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"initialize",ltm_bignum_initialize,-1);
     rb_define_method(cLT_M_Bignum,"initialize_copy",ltm_bignum_initialize_copy,1);
     rb_define_method(cLT_M_Bignum,"to_s",ltm_bignum_to_s, -1); 
+    rb_define_method(cLT_M_Bignum,"coerce",ltm_bignum_coerce, 1);
+    rb_define_method(cLT_M_Bignum, "==",ltm_bignum_eq, 1);
+    rb_define_method(cLT_M_Bignum, "eql?",ltm_bignum_eql, 1);
 
     /** Ruby Built int BigNum operators **/
     /*
-       rb_define_method(cLT_M_Bignum, "coerce",     ltm_bignum_coerce, 1);
        rb_define_method(cLT_M_Bignum, "-@",         ltm_bignum_uminus, 0);
        rb_define_method(cLT_M_Bignum, "+",          ltm_bignum_plus, 1);
        rb_define_method(cLT_M_Bignum, "-",          ltm_bignum_minus, 1);
@@ -207,8 +321,6 @@ void Init_libtommath()
        rb_define_method(cLT_M_Bignum, ">>",         ltm_bignum_rshift, 1);
        rb_define_method(cLT_M_Bignum, "[]",         ltm_bignum_aref, 1);
        rb_define_method(cLT_M_Bignum, "<=>",        ltm_bignum_cmp, 1);
-       rb_define_method(cLT_M_Bignum, "==",         ltm_bignum_eq, 1);
-       rb_define_method(cLT_M_Bignum, "eql?",       ltm_bignum_eql, 1);
        rb_define_method(cLT_M_Bignum, "hash",       ltm_bignum_hash, 0);
        rb_define_method(cLT_M_Bignum, "to_f",       ltm_bignum_to_f, 0);
        rb_define_method(cLT_M_Bignum, "abs",        ltm_bignum_abs, 0);

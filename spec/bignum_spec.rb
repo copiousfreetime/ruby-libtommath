@@ -73,3 +73,70 @@ describe LibTom::Math::Bignum, "conversions" do
         b.to_s(64).should == "rubyrules"
     end
 end
+
+describe LibTom::Math::Bignum, "object / class comparisons" do
+    before(:each) do
+        @big = LibTom::Math::Bignum.new(1234567890987654321)
+        @small = 42
+    end
+
+    it "should eql? self" do
+        @big.should.eql?(@big.dup)
+    end
+
+    it "should == self" do
+        @big.should == @big.dup
+    end
+
+    it "should not eql? ::Bignum(1234567890987654321)" do
+        @big.should_not.eql?(1234567890987654321)
+    end
+
+    it "should == ::Bignum(1234567890987654321)" do
+        @big.should == 1234567890987654321
+    end
+    
+    it "should not == ::Bignum(1234567890987654322)" do
+        @big.should_not == 1234567890987654322
+    end
+
+    it "should == Integer(42)" do
+        @small.should == 42
+    end
+
+    it "should not == Integer(63)" do
+        @small.should_not == 63
+    end
+
+    it "should not eql? Integer(42)" do
+        @small.should_not.eql?(42)
+    end
+
+    it "should == Float(42.0)" do
+        @small.should == 42.0
+    end
+
+    it "should not eql? Float(42.0)" do
+        @small.should_not.eql?(42.0)
+    end
+
+    it "should not == 42.42" do
+        @small.should_not == 42.42
+    end
+
+    it "should not == '42'" do 
+        @small.should_not == '42'
+    end
+end
+
+describe LibTom::Math::Bignum, "arithmetic operations" do
+    before(:each) do
+        @a = LibTom::Math::Bignum.new(1234567890987654321)
+        @b = LibTom::Math::Bignum.new(9876543210123456789)
+    end
+
+    it "should add correctly" do
+        c = @a - @b
+        c.should == 11111111101111111110
+    end
+end

@@ -17,10 +17,9 @@ end
 
 rspec = Spec::Rake::SpecTask.new do |r|
     r.warning   = true
-    r.rcov      = true
-    r.rcov_dir  = "doc/coverage"
     r.libs      << "./lib"
     r.libs      << "./ext/"
+    r.rcov      = false
     r.spec_opts  = %w(-f s)
 end
 
