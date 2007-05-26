@@ -1,19 +1,89 @@
 #include "ruby.h"
-#include <tommath.h>
+#include <tommath.h> 
 
-/*** Prototypes ***/
+/**********************************************************************
+ *                             Prototypes                             *
+ **********************************************************************/
+
+/* internal functions, not part of the API */
+static mp_int* value_to_mp_int(VALUE obj);
+static VALUE is_2(VALUE obj);
+
+
+/* Module and Class */
 static VALUE mLT;
 static VALUE mLT_M;
 static VALUE cLT_M_Bignum;
 static VALUE eLT_M_Error;
+
+/* Ruby Object life-cycle methods */
 static void ltm_bignum_free(mp_int *bn);
 static VALUE ltm_bignum_alloc(VALUE klass);
 static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self);
-static mp_int* value_to_mp_int(VALUE obj);
+
+/* Class instance methods */
+static VALUE ltm_bignum_coerce(VALUE self, VALUE other);
+
+/**********************************************************************
+ *                           Useful MACROS                            *
+ **********************************************************************/
+
 #define MP_INT(obj) (value_to_mp_int(obj))
 #define IS_LTM_BIGNUM(obj) (Qtrue == rb_obj_is_instance_of(obj,cLT_M_Bignum))
-#define ALLOC_BIGNUM (ltm_bignum_alloc(cLT_M_Bignum))
-#define NEW_BIGNUM_FROM(other) (rb_class_new_instance(1,&other,cLT_M_Bignum))
+#define ALLOC_LTM_BIGNUM (ltm_bignum_alloc(cLT_M_Bignum))
+#define NEW_LTM_BIGNUM_FROM(other) (rb_class_new_instance(1,&other,cLT_M_Bignum))
+#define IS_2(obj) (Qtrue == is_2(obj))
+
+/**********************************************************************
+ *                     Internally used functions                      *
+ **********************************************************************/
+
+/*
+ * See if the given Value has the integer value 2
+ */
+static VALUE is_2(VALUE obj)
+{
+    mp_int *a = NULL;
+    int val = -1;
+    int digit_count = 0;
+
+    switch (TYPE(obj)) {
+    case T_FIXNUM:
+        val = FIX2INT(obj);
+        break;
+    case T_FLOAT:
+        val = NUM2INT(obj);
+        break;
+    case T_BIGNUM:
+        if ((RBIGNUM(obj)->len == 1)) {
+            val = NUM2INT(obj);
+        }
+        break;
+    case T_DATA:
+        if (IS_LTM_BIGNUM(obj)) {
+            a = MP_INT(obj);
+            if (MP_OKAY == mp_radix_size(a,10,&digit_count)) {
+                /* digit count is the number of digits + space for the 
+                 * '\0' in the string.  Normally mp_radix_size is used
+                 * to allocate space for a string to hold the number
+                 */
+                if (2 == digit_count) {
+                    val = (unsigned long)mp_get_int(a);
+                }
+            }
+        }
+        break;
+    default:
+        /* nothing to do here, if it is not numeric then it we return
+         * false 
+         * */
+        break;
+    }
+
+    return (2 == val) ? Qtrue : Qfalse;
+}
+
+
 /*
  * Convert a VALUE into the internal struct we use for libtommmath
  */
@@ -29,6 +99,9 @@ static mp_int* value_to_mp_int(VALUE obj)
     return bn;
 }
 
+/**********************************************************************
+ *                       Class Instance methods                       *
+ **********************************************************************/
 
 /*
  * Numeric coercion protocol.
@@ -43,7 +116,7 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other)
         case T_FIXNUM:
         case T_BIGNUM:
         case T_FLOAT:
-            param = NEW_BIGNUM_FROM(other);
+            param = NEW_LTM_BIGNUM_FROM(other);
             receiver = self;
             break;
             /* FIXME
@@ -111,19 +184,19 @@ static VALUE ltm_bignum_abs(VALUE self)
  *
  * returns the sum of two bignums
  */
-static VALUE ltm_bignum_plus(VALUE self, VALUE other)
+static VALUE ltm_bignum_add(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
     mp_int *b;
     mp_int *c;
 
-    VALUE result = ALLOC_BIGNUM;
+    VALUE result = ALLOC_LTM_BIGNUM;
     int mp_result = MP_OKAY;
 
     if (IS_LTM_BIGNUM(other)) {
         b = MP_INT(other);
     } else {
-        b = MP_INT(NEW_BIGNUM_FROM(other));
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
     }
 
     c = MP_INT(result);
@@ -143,19 +216,19 @@ static VALUE ltm_bignum_plus(VALUE self, VALUE other)
  *
  * returns the difference of two bignums
  */
-static VALUE ltm_bignum_minus(VALUE self, VALUE other)
+static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
     mp_int *b;
     mp_int *c;
 
-    VALUE result = ALLOC_BIGNUM;
+    VALUE result = ALLOC_LTM_BIGNUM;
     int mp_result = MP_OKAY;
 
     if (IS_LTM_BIGNUM(other)) {
         b = MP_INT(other);
     } else {
-        b = MP_INT(NEW_BIGNUM_FROM(other));
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
     }
 
     c = MP_INT(result);
@@ -174,7 +247,7 @@ static VALUE ltm_bignum_minus(VALUE self, VALUE other)
  *  Bignum == obj  => true or false
  *
  * Returns true only if obj has the same value as Bignum.  This converts
- * non LTMBignum's to LTMBignums and does the comparison that way.
+ * non Bignum's to Bignums and does the comparison that way.
  */
 static VALUE ltm_bignum_eq(VALUE self, VALUE other)
 {
@@ -187,7 +260,7 @@ static VALUE ltm_bignum_eq(VALUE self, VALUE other)
     if (IS_LTM_BIGNUM(other)) {
         param = other;
     } else {
-        param = NEW_BIGNUM_FROM(other);
+        param = NEW_LTM_BIGNUM_FROM(other);
     }
 
     b = MP_INT(param);
@@ -218,35 +291,6 @@ static VALUE ltm_bignum_eql(VALUE self, VALUE other)
         } 
     }
     return Qfalse;
-}
-
-
-/*
- * garbage collector free method for mp_int structures
- */
-static void ltm_bignum_free(mp_int *bn)
-{
-    mp_clear(bn);
-    free(bn);
-    return ;
-}
-
-
-/*
- * Allocator for mp_int structures
- */
-static VALUE ltm_bignum_alloc(VALUE klass)
-{
-    mp_int *bn = ALLOC(mp_int);
-    VALUE  obj = (VALUE)NULL;
-    int mp_result = MP_OKAY;
-
-    if (MP_OKAY == (mp_result = mp_init(bn))) {
-        obj = Data_Wrap_Struct(klass,NULL,ltm_bignum_free,bn);
-    } else {
-        rb_raise(eLT_M_Error, "Failure to allocate Bignum: %s", mp_error_to_string(mp_result));
-    }
-    return obj;
 }
 
 
@@ -290,6 +334,92 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
     return result;
 }
 
+
+/*
+ * call-seq:
+ *   bignum * bignum
+ *
+ * returns the multiplication of a * b
+ */
+static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
+{
+    mp_int *a;
+    mp_int *c;
+
+    VALUE result = ALLOC_LTM_BIGNUM;
+    int mp_result = MP_OKAY;
+    int self_is_2, other_is_2;
+
+    c = MP_INT(result);
+
+    /* first find out if one of the values is a 2 or not.  Then we can use the fast
+     * multiplier
+     */
+    self_is_2 = IS_2(self);
+    other_is_2 = IS_2(other);
+   
+    /* using fast multiplier */
+    if (self_is_2 || other_is_2) {
+        if (self_is_2 && IS_LTM_BIGNUM(other)) {
+            a = MP_INT(other);
+        } else {
+            a = MP_INT(self);
+        }
+        if (MP_OKAY != (mp_result = mp_mul_2(a,c))) {
+            rb_raise(eLT_M_Error,"Failure to multiply Bignums: %s", 
+                mp_error_to_string(mp_result));
+        }
+    } else {
+        /* other is not 2, so use the normal multiplier */
+        mp_int *b;
+
+        a = MP_INT(self);
+
+        if (IS_LTM_BIGNUM(other)) {
+            b = MP_INT(other);
+        } else {
+            b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+        }
+
+        if (MP_OKAY != (mp_result = mp_mul(a,b,c))) {
+            rb_raise(eLT_M_Error,"Failure to multiply Bignums: %s", 
+                    mp_error_to_string(mp_result));
+        }
+    }
+
+    return result;
+}
+/**********************************************************************
+ *                   Ruby Object life-cycle methods                   *
+ **********************************************************************/
+
+/*
+ * garbage collector free method for mp_int structures
+ */
+static void ltm_bignum_free(mp_int *bn)
+{
+    mp_clear(bn);
+    free(bn);
+    return ;
+}
+
+
+/*
+ * Allocator for mp_int structures
+ */
+static VALUE ltm_bignum_alloc(VALUE klass)
+{
+    mp_int *bn = ALLOC(mp_int);
+    VALUE  obj = (VALUE)NULL;
+    int mp_result = MP_OKAY;
+
+    if (MP_OKAY == (mp_result = mp_init(bn))) {
+        obj = Data_Wrap_Struct(klass,NULL,ltm_bignum_free,bn);
+    } else {
+        rb_raise(eLT_M_Error, "Failure to allocate Bignum: %s", mp_error_to_string(mp_result));
+    }
+    return obj;
+}
 
 /**
  * call-seq:
@@ -384,10 +514,9 @@ static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
     return copy;
 }
 
-/*
- * Library initialization.  Called when require 'libtom/math' is parsed
- * in a ruby program.
- */
+/**********************************************************************
+ *                   Ruby extension initialization                    *
+ **********************************************************************/
 void Init_libtommath()
 {
     /* module definitions */
@@ -412,12 +541,14 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"coerce",ltm_bignum_coerce, 1);
     rb_define_method(cLT_M_Bignum, "-@",ltm_bignum_uminus, 0);
     rb_define_method(cLT_M_Bignum, "abs",ltm_bignum_abs, 0);
-    rb_define_method(cLT_M_Bignum, "+",ltm_bignum_plus, 1);
-    rb_define_method(cLT_M_Bignum, "-",ltm_bignum_minus, 1);
+    rb_define_method(cLT_M_Bignum, "+",ltm_bignum_add, 1);
+    rb_define_method(cLT_M_Bignum, "-",ltm_bignum_subtract, 1);
+    rb_define_method(cLT_M_Bignum, "*",ltm_bignum_multiply, 1);
+    rb_define_method(cLT_M_Bignum, "is_2?",is_2, 0);
+
 
     /** Ruby Built int BigNum operators **/
     /*
-       rb_define_method(cLT_M_Bignum, "*",          ltm_bignum_mul, 1);
        rb_define_method(cLT_M_Bignum, "/",          ltm_bignum_div, 1);
        rb_define_method(cLT_M_Bignum, "%",          ltm_bignum_modulo, 1);
        rb_define_method(cLT_M_Bignum, "div",        ltm_bignum_div, 1);

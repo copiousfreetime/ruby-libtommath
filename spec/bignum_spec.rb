@@ -149,6 +149,7 @@ describe LibTom::Math::Bignum, "object / class comparisons" do
 end
 
 describe LibTom::Math::Bignum, "arithmetic operations" do
+    @other  = LibTom::Math::Bignum.new(1234567890987654321)
     before(:each) do
         @a = LibTom::Math::Bignum.new(1234567890987654321)
         @b = LibTom::Math::Bignum.new(9876543210123456789)
@@ -164,133 +165,68 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
         c.abs.should == @a
     end
 
-    it "should add with a Bignum and produce the correct sum" do
-        c = @a + @b
-        c.should == 11111111101111111110
-    end
+    answers = {
+        # test has param1, param2, [result of param1 op param2, result of param2 op param1]
+        # klass => Array of tests
+        "+" => { Float => [ [@other, 42.42, [1234567890987654363,1234567890987654363]]],
+                 Integer => [ [@other, 42,  [1234567890987654363,1234567890987654363]]],
+                 Bignum => [ [@other,9876543210123456789, [11111111101111111110,11111111101111111110 ]]],
+                 LibTom::Math::Bignum => [ [@other, LibTom::Math::Bignum.new(42424242424242424242),
+                                            [43658810315230078563,43658810315230078563]]]
+              },
+        "-" => { Float => [ [@other,21.52,[1234567890987654300,-1234567890987654300]]],
+                 Integer => [[@other,54321, [1234567890987600000,-1234567890987600000]]],
+                 Bignum => [[@other,42424242424242424242, [-41189674533254769921,41189674533254769921]]],
+                 LibTom::Math::Bignum => [ [@other, LibTom::Math::Bignum.new(42424242424242424242),
+                                            [-41189674533254769921,41189674533254769921]]]
+                } ,
+
+        "*" => { Float => [ [@other, 42.42, [51851851421481481482, 51851851421481481482]],
+                            [@other, 2.0, [2469135781975308642, 2469135781975308642]]],
+                 Integer =>[[@other,42, [51851851421481481482,51851851421481481482]],
+                            [@other,2, [2469135781975308642, 2469135781975308642]]],
+                 Bignum => [[@other,42424242424242424242, [52375607496445940890385334834126449682,
+                                                          52375607496445940890385334834126449682]]],
+                 LibTom::Math::Bignum => [[@other,
+                                           LibTom::Math::Bignum.new(42424242424242424242),
+                                           [ 52375607496445940890385334834126449682,
+                                               52375607496445940890385334834126449682]],
+                                          [@other,
+                                           LibTom::Math::Bignum.new(2),
+                                           [2469135781975308642,2469135781975308642]]]
+               },
+        "/" => { Float => [ [@other, 42.42, [51851851421481481482, 51851851421481481482]],
+                            [@other, 2.0, [2469135781975308642, 2469135781975308642]]],
+                 Integer =>[[@other,42, [51851851421481481482,51851851421481481482]],
+                            [@other,2, [2469135781975308642, 2469135781975308642]]],
+                 Bignum => [[@other,42424242424242424242, [52375607496445940890385334834126449682,
+                                                          52375607496445940890385334834126449682]]],
+                 LibTom::Math::Bignum => [[@other,
+                                           LibTom::Math::Bignum.new(42424242424242424242),
+                                           [ 52375607496445940890385334834126449682,
+                                               52375607496445940890385334834126449682]],
+                                          [@other,
+                                           LibTom::Math::Bignum.new(2),
+                                           [2469135781975308642,2469135781975308642]]]
+               }
  
-    it "should add with a ::Bignum and produce the correct sum (bignum + ::bignum)" do
-        c = @a + 9876543210123456789
-        c.should == 11111111101111111110
-    end
-    
-    it "should add with a ::Bignum and produce the correct sum (::bignum + bignum)" do
-        c =  9876543210123456789 + @a
-        c.should == 11111111101111111110
-    end
-    
-    it "should add with a ::Bignum and produce a Bignum (bignum + ::bignum)" do
-        c =  @a + 9876543210123456789 
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-    
-    it "should add with a ::Bignum and produce a Bignum (::bignum + bignum)" do
-        c =  9876543210123456789 + @a
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
- 
-    it "should subtract with a ::Bignum and produce the correct difference (bignum - ::bignum)" do
-        c = @a - 9876543210123456789
-        c.should == -8641975319135802468
-    end
-    
-    it "should subtract with a ::Bignum and produce the correct difference (::bignum - bignum)" do
-        c = 9876543210123456789 - @a
-        c.should == 8641975319135802468
-    end
-
-    it "should subtract with a ::Bignum and produce a Bignum (bignum - ::bignum)" do
-        c =  @a - 9876543210123456789 
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-    
-    it "should subtract with a ::Bignum and produce a Bignum (::bignum - bignum)" do
-        c = 9876543210123456789 - @a
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-  
-    it "should add with an Integer and produce the correct sum (bignum + int) " do
-        c = @a + 9
-        c.should == 1234567890987654330
-    end
-    
-    it "should add with an Integer and produce the correct sum (int + bignum) " do
-        c = 9 + @a 
-        c.should == 1234567890987654330
-    end
-    
-    it "should add with an Integer and produce a Bignum (bignum + int)" do
-        c = @a + 9
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-    
-    it "should add with an Integer and produce a Bignum (int + bignum)" do
-        c = 9 + @a 
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-
-    it "should subtract with a Bignum and produce the correct difference" do
-        c = @a - @b
-        c.should == -8641975319135802468
-    end
-
-    it "should subtract with an Integer and produce the correct difference (int - bignum)" do
-        c = 54321 - LibTom::Math::Bignum.new(321)
-        c.should == 54000
-    end
-    
-    it "should subtract with an Integer and produce a Bignum (int - bignum)" do
-        c = 54321 - LibTom::Math::Bignum.new(321)
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-    
-    it "should subtract with an Integer and produce the correct difference (bignum - int)" do
-        c = @a - 54321
-        c.should == 1234567890987600000
-    end
-    
-    it "should subtract with an Integer and produce a Bignum (bignum - int)" do
-        c = @a - 54321
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-
-    it "should add with a Float and produce the right sum (bignum + float)" do
-        c = @a + 42.42
-        c.should == 1234567890987654363
-    end
-    
-    it "should add with a Float and produce the right sum (float + bignum)" do
-        c = 42.42 + @a
-        c.should == 1234567890987654363
-    end
-
-    it "should add with a Float and produce a Bignum (bignum + float)" do 
-        c = @a + 42.42
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-    
-    it "should add with a Float and produce a Bignum (float + bignum)" do 
-        c = 42.42 + @a
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
-    
-    it "should subtract with a Float and produce the right difference (bignum - float)" do
-        c = @a - 21.52
-        c.should == LibTom::Math::Bignum.new(1234567890987654300)
-    end
-    
-    it "should subtract with a Float and produce the right difference (float - bignum)" do
-        c = 21.52 - @a
-        c.should == -1234567890987654300
-    end
-
-    it "should subtract with a Float and produce a Bignum (bignum - float)" do
-        c = @a - 21.52
-        c.should be_an_instance_of(LibTom::Math::Bignum)
-    end
- 
-    it "should subtract with a Float and produce a Bignum (float - bignum)" do
-        c = 21.52 - @a
-        c.should be_an_instance_of(LibTom::Math::Bignum)
+    }
+    answers.each_pair do |op,op_suite|
+        op_suite.each do |klass,klass_suite|
+            klass_suite.each do |config|
+                param1 = config[0]
+                param2 = config[1]
+                results = config[2]
+                tests = [{ :receiver => param1, :param => param2, :result => results[0] },
+                         { :receiver => param2, :param => param1, :result => results[1] }]
+                tests.each do |test|
+                    should_text = "should #{op} with #{klass.name} and produce the right answer (#{test[:receiver].class.name} #{op} #{test[:param].class.name})"
+                    it should_text do
+                        c = test[:receiver].send(op,test[:param])
+                        c.should == test[:result]
+                    end
+                end
+            end
+        end
     end
 end
