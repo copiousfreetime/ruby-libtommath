@@ -294,6 +294,14 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
     it "should perform remainder correctly - both neg " do
         (-@a).remainder(-42).should == -21
     end
+
+    it "should be able to raise to a power " do
+        (@a ** 8).should == (1234567890987654321 ** 8)
+    end
+
+    it "should be able to raise to a big power" do
+        (@a**1000).should == (1234567890987654321 ** 1000)
+    end
 end
 
 describe LibTom::Math::Bignum, "utility operations" do
@@ -362,5 +370,55 @@ describe LibTom::Math::Bignum, "utility operations" do
     it "should match hashes on same numbers" do
         c = @a.dup
         c.hash.should equal(@a.hash)
+    end
+end
+
+
+describe LibTom::Math::Bignum, "bitwise operations" do
+    before(:each) do
+        @a = LibTom::Math::Bignum.new(1234567890987654321)
+        @b = LibTom::Math::Bignum.new(9876543210123456789)
+        @c = 1234567890987654321
+        @d = 9876543210123456789
+    end
+
+    it "should AND correctly" do
+        (@a & @b).should == (@c & @d)
+    end
+    
+    it "should OR correctly" do
+        (@a | @b).should == (@c | @d)
+    end
+    
+    it "should XOR correctly" do
+        (@a ^ @b).should == (@c ^ @d)
+    end
+
+    it "should << Integer correctly" do
+        (@a << 8).should == (@c << 8)
+    end
+
+    it "should << Float correctly" do
+        (@a << 8.5).should == (@c << 8.5)
+    end
+
+    it "should not allow << of non numbers " do
+        lambda { @a << "foo" }.should raise_error(TypeError)
+    end
+
+    it "should >> Integer correctly" do
+        (@a >> 8).should == (@c >> 8)
+    end
+
+    it "should << Float correctly" do
+        (@a >> 8.5).should == (@c >> 8.5)
+    end
+
+    it "should not allow >> of non numbers " do
+        lambda { @a >> "foo" }.should raise_error(TypeError)
+    end
+
+    it "should do bitwise negation " do
+        (~@a).should == ~@c
     end
 end

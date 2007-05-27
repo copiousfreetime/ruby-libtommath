@@ -355,7 +355,7 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
     if (MP_OKAY != (mp_result = mp_toradix(bn,mp_str,radix))) {
         rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
     }
-    result = rb_str_new2(mp_str); 
+    result = rb_str_new(mp_str,mp_size-1); 
     free(mp_str);
     return result;
 }
@@ -758,6 +758,171 @@ static VALUE ltm_bignum_hash(VALUE self)
 }
 
 
+/*
+ * call-seq:
+ *  a**b -> bignum
+ */
+static VALUE ltm_bignum_pow(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c = MP_INT(result);
+    unsigned long exponent = NUM2LONG(other);
+    int mp_result;
+
+    if (MP_OKAY != (mp_result = mp_expt_d(a,(mp_digit)exponent,c))) {
+        rb_raise(eLT_M_Error, "Failure raising Bignum to power %lu : %s", 
+                exponent, mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq: 
+ *  a & b -> bitwise and
+ */
+static VALUE ltm_bignum_bit_and(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c = MP_INT(result);
+    int mp_result;
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+
+    if (MP_OKAY != (mp_result = mp_and(a,b,c))) {
+        rb_raise(eLT_M_Error, "Failure bitwise AND of Bignum: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq: 
+ *  a | b -> bitwise or
+ */
+static VALUE ltm_bignum_bit_or(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c = MP_INT(result);
+    int mp_result;
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+
+    if (MP_OKAY != (mp_result = mp_or(a,b,c))) {
+        rb_raise(eLT_M_Error, "Failure bitwise OR of Bignum: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+/*
+ * call-seq: 
+ *  a ^ b -> bitwise xor
+ */
+static VALUE ltm_bignum_bit_xor(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c = MP_INT(result);
+    int mp_result;
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+
+    if (MP_OKAY != (mp_result = mp_xor(a,b,c))) {
+        rb_raise(eLT_M_Error, "Failure bitwise XOR of Bignum: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq: 
+ *  a << b -> shift a left by b bits
+ */
+static VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *b = MP_INT(result);
+    unsigned long shift_width = NUM2ULONG(other);
+    int mp_result;
+    unsigned long i;
+
+
+    /* copy a into c to start */;
+    if (MP_OKAY != (mp_result = mp_copy(a,b))) {
+            rb_raise(eLT_M_Error, "Failure leftshift of %lu bits Bignum: %s", 
+                shift_width,mp_error_to_string(mp_result));
+    }
+
+    /* do mp_mul_2 shift_width times */
+    for (i = 0 ; i < shift_width ; i++) {
+        if (MP_OKAY != (mp_result = mp_mul_2(b,b))) {
+            rb_raise(eLT_M_Error, "Failure leftshift of %lu bits Bignum: %s", 
+                shift_width,mp_error_to_string(mp_result));
+        }
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq: 
+ *  a >> b -> shift a right by b bits
+ */
+static VALUE ltm_bignum_rshift_bits(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *b = MP_INT(result);
+    unsigned long shift_width = NUM2ULONG(other);
+    int mp_result;
+    unsigned long i;
+
+
+    /* copy a into b to start */;
+    if (MP_OKAY != (mp_result = mp_copy(a,b))) {
+            rb_raise(eLT_M_Error, "Failure right shift of %lu bits Bignum: %s", 
+                shift_width,mp_error_to_string(mp_result));
+    }
+
+    /* do mp_div_2 shift_width times */
+    for (i = 0 ; i < shift_width ; i++) {
+        if (MP_OKAY != (mp_result = mp_div_2(b,b))) {
+            rb_raise(eLT_M_Error, "Failure right shift of %lu bits Bignum: %s", 
+                shift_width,mp_error_to_string(mp_result));
+        }
+    }
+
+    return result;
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -951,8 +1116,7 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum, "%", ltm_bignum_modulo, 1);
     rb_define_method(cLT_M_Bignum, "modulo",ltm_bignum_modulo, 1);
     rb_define_method(cLT_M_Bignum, "divmod",ltm_bignum_divmod, 1);
-    /*rb_define_method(cLT_M_Bignum, "**",ltm_bignum_pow, 1);
-     * */
+    rb_define_method(cLT_M_Bignum, "**",ltm_bignum_pow, 1);
  
     /* utility methods */
     rb_define_method(cLT_M_Bignum, "size",ltm_bignum_size, 0);
@@ -966,14 +1130,19 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum, "hash",ltm_bignum_hash, 0);
 
     /* logical / bitwise  operators */
-    /*
-      rb_define_method(cLT_M_Bignum, "&",          ltm_bignum_and, 1);
-       rb_define_method(cLT_M_Bignum, "|",          ltm_bignum_or, 1);
-       rb_define_method(cLT_M_Bignum, "^",          ltm_bignum_xor, 1);
-       rb_define_method(cLT_M_Bignum, "~",          ltm_bignum_neg, 0);
-       rb_define_method(cLT_M_Bignum, "<<",         ltm_bignum_lshift, 1);
-       rb_define_method(cLT_M_Bignum, ">>",         ltm_bignum_rshift, 1);
-       rb_define_method(cLT_M_Bignum, "[]",         ltm_bignum_aref, 1);
+    rb_define_method(cLT_M_Bignum, "&",ltm_bignum_bit_and, 1);
+    rb_define_method(cLT_M_Bignum, "|",ltm_bignum_bit_or, 1);
+    rb_define_method(cLT_M_Bignum, "^",ltm_bignum_bit_xor, 1);
+    rb_define_method(cLT_M_Bignum, "<<",ltm_bignum_lshift_bits, 1);
+    rb_define_method(cLT_M_Bignum, ">>",ltm_bignum_rshift_bits, 1);
+
+    /* Bit wise negation and accessing a single bit as a bit vector, not
+     * explicitly supported by libtom math.  They may be able to be
+     * hacked around, but it may not be worth it.
+     
+    rb_define_method(cLT_M_Bignum, "~",ltm_bignum_bit_neg, 0);
+    rb_define_method(cLT_M_Bignum, "[]",ltm_bignum_aref, 1);
+    
      */
 
 
