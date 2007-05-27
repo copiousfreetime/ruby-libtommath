@@ -1032,7 +1032,7 @@ static VALUE ltm_rand_of_size(VALUE self, VALUE other)
 
 /*
  * call-seq:
- *  a.addmod(b,c) -> Bignum
+ *  a.add_modulus(b,c) -> Bignum
  *
  *  returns a + b mod c
  */
@@ -1046,6 +1046,28 @@ static VALUE ltm_bignum_add_modulus(VALUE self, VALUE p1, VALUE p2)
     int mp_result;
     
     if (MP_OKAY != (mp_result = mp_addmod(a,b,c,d))) {
+        rb_raise(eLT_M_Error, "Failure calculating add_modulos: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+/*
+ * call-seq:
+ *  a.subtract_modulus(b,c) -> Bignum
+ *
+ *  returns a - b mod c
+ */
+static VALUE ltm_bignum_subtract_modulus(VALUE self, VALUE p1, VALUE p2)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    mp_int *c    = NUM2MP_INT(p2);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *d    = MP_INT(result);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_submod(a,b,c,d))) {
         rb_raise(eLT_M_Error, "Failure calculating add_modulos: %s\n",
             mp_error_to_string(mp_result));
     }
@@ -1293,8 +1315,8 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"mod_2d",ltm_bignum_modulo_2d,1);
 
     rb_define_method(cLT_M_Bignum,"add_modulus",ltm_bignum_add_modulus,2);
+    rb_define_method(cLT_M_Bignum,"subtract_modulus",ltm_bignum_subtract_modulus,2);
     /*
-    rb_define_method(cLT_M_Bignum,"sub_modulus",ltm_bignum_add_modulus,2);
     rb_define_method(cLT_M_Bignum,"multiply_modulus",ltm_bignum_add_modulus,2);
     rb_define_method(cLT_M_Bignum,"square_modulus",ltm_bignum_add_modulus,1);
     rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_add_modulus,1);

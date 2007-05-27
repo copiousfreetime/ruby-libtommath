@@ -460,21 +460,42 @@ describe LibTom::Math::Bignum, "Bonus methods" do
         LibTom::Math::Bignum.new(17).left_shift_digits(2).should == 1224979098644774912
     end
 
-    it "can calculate massive powers of 2" do
+    it "should calculate powers of 2" do
         p = LibTom::Math.two_to_the(128)
         p.should == 340282366920938463463374607431768211456 
     end
 
-    it "can square a Bignum" do
+    it "should square a Bignum" do
         @b.squared.should == (9876543210123456789 * 9876543210123456789)
     end
 
-    it "can do a = b module 2**d" do
+    it "should do a = b module 2**d" do
         @b.modulo_pow2(12).should == 277
     end
 
-    it "can generate random numbers with minimum bit length" do
+    it "should generate random numbers with minimum bit length" do
         p = LibTom::Math::rand_of_size(1024)
         p.num_bits.should >= 1024
     end
+
+    it "should do d = (a + b) mod c" do
+        @a.add_modulus(@b,42).should == ((@c + @d) % 42)
+    end
+
+    it "should do d = (a - b) mod c" do
+        @a.subtract_modulus(@b,42).should == ((@c - @d) % 42)
+    end
+    
+    it "should do d = (a * b) mod c" do
+        @a.multiply_modulus(@b,42).should == ((@c * @d) % 42)
+    end
+
+    it "should do c = (a *a) mod b" do
+        @a.square_modulus(42).should == ((@c * @c) % 42)
+    end
+
+    it "should do c = (1/a) mod b" do
+        @a.inverse_modulus(42).should == ((1 / @c) % 42)
+    end
+
 end
