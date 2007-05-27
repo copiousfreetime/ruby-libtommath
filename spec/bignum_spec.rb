@@ -418,7 +418,11 @@ describe LibTom::Math::Bignum, "bitwise operations" do
         lambda { @a >> "foo" }.should raise_error(TypeError)
     end
 
-    it "should do bitwise negation " do
-        (~@a).should == ~@c
+    it "should NOT implement bitwise negation - NOT IMPLEMENTED " do
+        lambda { ~@a }.should raise_error(NotImplementedError);
+    end
+    
+    it "should NOT implement bit refencing - NOT IMPLEMENTED " do
+        lambda { @a[0] }.should raise_error(NotImplementedError);
     end
 end
