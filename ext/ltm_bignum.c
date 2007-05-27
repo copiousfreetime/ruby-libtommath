@@ -192,7 +192,7 @@ static VALUE ltm_bignum_uminus(VALUE self)
     mp_int *a     = MP_INT(self);
     VALUE b_value = rb_funcall(self,rb_intern("dup"),0);
     mp_int *b     = MP_INT(b_value);
-    int mp_result = MP_OKAY;
+    int mp_result;
 
     if (MP_OKAY != (mp_result = mp_neg(a,b))) {
         rb_raise(eLT_M_Error,"Unable to negate Bignum: %s", 
@@ -213,7 +213,7 @@ static VALUE ltm_bignum_abs(VALUE self)
     mp_int *a     = MP_INT(self);
     VALUE b_value = rb_funcall(self,rb_intern("dup"),0);
     mp_int *b     = MP_INT(b_value);
-    int mp_result = MP_OKAY;
+    int mp_result;
 
     if (MP_OKAY != (mp_result = mp_abs(a,b))) {
         rb_raise(eLT_M_Error,"Failure to take absolute value of Bignum: %s", 
@@ -231,14 +231,11 @@ static VALUE ltm_bignum_abs(VALUE self)
  */
 static VALUE ltm_bignum_add(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b = NUM2MP_INT(other);
-    mp_int *c;
-
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
     VALUE result = ALLOC_LTM_BIGNUM;
-    int mp_result = MP_OKAY;
-
-    c = MP_INT(result);
+    mp_int *c    = MP_INT(result);
+    int mp_result;
 
     if (MP_OKAY != (mp_result = mp_add(a,b,c))) {
         rb_raise(eLT_M_Error,"Failure to add two Bignums: %s", 
@@ -257,14 +254,11 @@ static VALUE ltm_bignum_add(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b = NUM2MP_INT(other);
-    mp_int *c;
-
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
     VALUE result = ALLOC_LTM_BIGNUM;
-    int mp_result = MP_OKAY;
-
-    c = MP_INT(result);
+    mp_int *c    = MP_INT(result);
+    int mp_result;
 
     if (MP_OKAY != (mp_result = mp_sub(a,b,c))) {
         rb_raise(eLT_M_Error,"Failure to subtract two Bignums: %s", 
@@ -302,10 +296,9 @@ static VALUE ltm_bignum_eq(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_eql(VALUE self, VALUE other)
 {
-    mp_int *a;
+    mp_int *a = MP_INT(self);
     mp_int *b;
 
-    a = MP_INT(self);
     if (IS_LTM_BIGNUM(other)) {
         b = MP_INT(other);
         if (MP_EQ == mp_cmp(a,b)) {
@@ -318,17 +311,18 @@ static VALUE ltm_bignum_eql(VALUE self, VALUE other)
 
 /**
  * call-seq:
- *      to_s(radix = 10) -> String
+ *  a.to_s(radix = 10) -> String
  *
  * convert the given Bignum to a string with base(radix). Radix can be a
  * value in the range 2..64
  */
 static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
 {
-    mp_int *bn;
+    mp_int *a      = MP_INT(self);
+    int radix      = 10;
+    int mp_size    = 0;
+    int mp_result;
     VALUE result;
-    int radix = 10;
-    int mp_result, mp_size = 0;
     char *mp_str;
 
     /* converting to a particular base */
@@ -342,13 +336,12 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
     }
 
     /* create a local string then convert it to an RSTRING */
-    bn = MP_INT(self);
-    if (MP_OKAY != (mp_result = mp_radix_size(bn,radix,&mp_size))) {
+    if (MP_OKAY != (mp_result = mp_radix_size(a,radix,&mp_size))) {
         rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
     }
 
     mp_str = ALLOC_N(char,mp_size);
-    if (MP_OKAY != (mp_result = mp_toradix(bn,mp_str,radix))) {
+    if (MP_OKAY != (mp_result = mp_toradix(a,mp_str,radix))) {
         rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
     }
     result = rb_str_new(mp_str,mp_size-1); 
@@ -365,14 +358,11 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
  */
 static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
 {
-    mp_int *a;
-    mp_int *c;
-
     VALUE result = ALLOC_LTM_BIGNUM;
-    int mp_result = MP_OKAY;
+    mp_int *c    = MP_INT(result);
+    mp_int *a;
+    int mp_result;
     int self_is_2, other_is_2;
-
-    c = MP_INT(result);
 
     /* first find out if one of the values is a 2 or not.  Then we can use the fast
      * multiplier
@@ -396,12 +386,7 @@ static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
         mp_int *b;
 
         a = MP_INT(self);
-
-        if (IS_LTM_BIGNUM(other)) {
-            b = MP_INT(other);
-        } else {
-            b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-        }
+        b = NUM2MP_INT(other);
 
         if (MP_OKAY != (mp_result = mp_mul(a,b,c))) {
             rb_raise(eLT_M_Error,"Failure to multiply Bignums: %s", 
@@ -421,15 +406,12 @@ static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_divide(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *c;
-
+    mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
-    int mp_result = MP_OKAY;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
     
-    c = MP_INT(result);
-
-    /* first find out if one of the values is a 2 or not.  Then we can use the fast
+    /* first find out if b is 2 or not.  Then we can use the fast
      * divisor
      */
     if (IS_2(other)) {
@@ -442,12 +424,7 @@ static VALUE ltm_bignum_divide(VALUE self, VALUE other)
         mp_int *b;
 
         a = MP_INT(self);
-
-        if (IS_LTM_BIGNUM(other)) {
-            b = MP_INT(other);
-        } else {
-            b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-        }
+        b = NUM2MP_INT(other);
 
         if (MP_OKAY != (mp_result = mp_div(a,b,c,NULL))) {
             if (MP_VAL == mp_result) {
@@ -470,26 +447,17 @@ static VALUE ltm_bignum_divide(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_remainder(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b;
-    mp_int *c;
-
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
     VALUE result = ALLOC_LTM_BIGNUM;
-    int mp_result = MP_OKAY;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
     
-
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
-
-    c = MP_INT(result);
     if (MP_OKAY != (mp_result = mp_div(a,b,NULL,c))) {
         if (MP_VAL == mp_result) {
             rb_raise(rb_eZeroDivError,"divide by 0");
         }
-        rb_raise(eLT_M_Error,"Failure to divide Bignums: %s", 
+        rb_raise(eLT_M_Error,"Failure to divide Bignum: %s", 
                 mp_error_to_string(mp_result));
     }
 
@@ -505,20 +473,11 @@ static VALUE ltm_bignum_remainder(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_modulo(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b;
-    mp_int *c;
-
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
     VALUE result = ALLOC_LTM_BIGNUM;
-    int mp_result = MP_OKAY;
-    
-    c = MP_INT(result);
-
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
+    mp_int *c    = MP_INT(result);
+    int mp_result;
 
     if (MP_OKAY != (mp_result = mp_mod(a,b,c))) {
         if (MP_VAL == mp_result) {
@@ -540,7 +499,8 @@ static VALUE ltm_bignum_modulo(VALUE self, VALUE other)
 static VALUE ltm_bignum_divmod(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
-    mp_int *b;
+    mp_int *b = NUM2MP_INT(other);
+    int mp_result;
 
     VALUE div = ALLOC_LTM_BIGNUM;
     VALUE mod = ALLOC_LTM_BIGNUM;
@@ -548,13 +508,7 @@ static VALUE ltm_bignum_divmod(VALUE self, VALUE other)
     mp_int *m_div= MP_INT(div);
     mp_int *m_mod = MP_INT(mod);
 
-    int mp_result = MP_OKAY;
 
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
     /* calc div */
     if (MP_OKAY != (mp_result = mp_div(a,b,m_div,NULL))) {
         if (MP_VAL == mp_result) {
@@ -603,12 +557,11 @@ static VALUE ltm_bignum_size(VALUE self)
  */
 static VALUE ltm_bignum_to_f(VALUE self)
 {
-    mp_int *a = MP_INT(self);
+    mp_int *a   = MP_INT(self);
+    double f    = HUGE_VAL; /* assume that self is > Float::MAX */
 
     VALUE tmp_float;
     VALUE tmp_string;
-    double f = HUGE_VAL; /* assume that self is > Float::MAX */
-
     int mp_result;
     int mp_size;
     char *mp_str;
@@ -622,6 +575,7 @@ static VALUE ltm_bignum_to_f(VALUE self)
     }
 
     mp_str = ALLOC_N(char,mp_size);
+
     if (MP_OKAY != (mp_result = mp_toradix(a,mp_str,10))) {
         rb_raise(eLT_M_Error, "Unable to convert Bignum to Float: %s", 
                 mp_error_to_string(mp_result));
@@ -630,8 +584,10 @@ static VALUE ltm_bignum_to_f(VALUE self)
     tmp_string = rb_str_new2(mp_str); 
     free(mp_str);
 
+    /* convert the new ruby string into a float then convert that to a float  */
     tmp_float =  rb_funcall(tmp_string,rb_intern("to_f"),0);
     f = NUM2DBL(tmp_float);
+
     return rb_float_new(f);
 }
 
@@ -641,14 +597,8 @@ static VALUE ltm_bignum_to_f(VALUE self)
 static VALUE ltm_bignum_spaceship(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
-    mp_int *b;
+    mp_int *b = NUM2MP_INT(other);
 
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
-    
     switch (mp_cmp(a,b)) {
         case MP_LT:
             return INT2FIX(-1);
@@ -760,9 +710,10 @@ static VALUE ltm_bignum_hash(VALUE self)
  */
 static VALUE ltm_bignum_pow(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
+    mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
-    mp_int *c = MP_INT(result);
+    mp_int *c    = MP_INT(result);
+
     unsigned long exponent = NUM2LONG(other);
     int mp_result;
 
@@ -781,17 +732,11 @@ static VALUE ltm_bignum_pow(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_bit_and(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b;
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
     VALUE result = ALLOC_LTM_BIGNUM;
-    mp_int *c = MP_INT(result);
+    mp_int *c    = MP_INT(result);
     int mp_result;
-
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
 
     if (MP_OKAY != (mp_result = mp_and(a,b,c))) {
         rb_raise(eLT_M_Error, "Failure bitwise AND of Bignum: %s", 
@@ -808,17 +753,11 @@ static VALUE ltm_bignum_bit_and(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_bit_or(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b;
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
     VALUE result = ALLOC_LTM_BIGNUM;
-    mp_int *c = MP_INT(result);
+    mp_int *c    = MP_INT(result);
     int mp_result;
-
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
 
     if (MP_OKAY != (mp_result = mp_or(a,b,c))) {
         rb_raise(eLT_M_Error, "Failure bitwise OR of Bignum: %s", 
@@ -834,17 +773,12 @@ static VALUE ltm_bignum_bit_or(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_bit_xor(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
-    mp_int *b;
-    VALUE result = ALLOC_LTM_BIGNUM;
-    mp_int *c = MP_INT(result);
-    int mp_result;
 
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(other);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
 
     if (MP_OKAY != (mp_result = mp_xor(a,b,c))) {
         rb_raise(eLT_M_Error, "Failure bitwise XOR of Bignum: %s", 
@@ -861,16 +795,16 @@ static VALUE ltm_bignum_bit_xor(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
+    mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
-    mp_int *b = MP_INT(result);
+    mp_int *b    = MP_INT(result);
+
     unsigned long shift_width = NUM2ULONG(other);
     int mp_result;
 
-
     /* copy a into c to start */;
     if (MP_OKAY != (mp_result = mp_copy(a,b))) {
-            rb_raise(eLT_M_Error, "Failure leftshift of %lu bits Bignum: %s", 
+            rb_raise(eLT_M_Error, "Failure left shift of %lu bits Bignum: %s", 
                 shift_width,mp_error_to_string(mp_result));
     }
 
@@ -878,7 +812,7 @@ static VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
      * bits shift_width times
      */
     if (MP_OKAY != (mp_result = mp_mul_2d(b,shift_width,b))) {
-        rb_raise(eLT_M_Error, "Failure leftshift of %lu bits Bignum: %s", 
+        rb_raise(eLT_M_Error, "Failure left shift of %lu bits Bignum: %s", 
             shift_width,mp_error_to_string(mp_result));
     }
 
@@ -892,12 +826,12 @@ static VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_rshift_bits(VALUE self, VALUE other)
 {
-    mp_int *a = MP_INT(self);
+    mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
-    mp_int *b = MP_INT(result);
+    mp_int *b    = MP_INT(result);
+
     unsigned long shift_width = NUM2ULONG(other);
     int mp_result;
-
 
     /* copy a into b to start */;
     if (MP_OKAY != (mp_result = mp_copy(a,b))) {

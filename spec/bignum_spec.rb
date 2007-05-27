@@ -263,6 +263,19 @@ describe LibTom::Math::Bignum, "arithmetic operations" do
         end
     end
 
+    it "should throw ZeroDivisionError when / 0 (Integer)" do
+        lambda { @a / 0 }.should raise_error(ZeroDivisionError)
+    end
+    
+    it "should throw ZeroDivisionError when / 0 (Float)" do
+        lambda { @a / 0.0 }.should raise_error(ZeroDivisionError)
+    end
+    
+    it "should throw ZeroDivisionError when / 0 (LTMBignum)" do
+        zero = LibTom::Math::Bignum.new(0)
+        lambda { @a / zero }.should raise_error(ZeroDivisionError)
+    end
+
     it "should perform divmod correctly - all pos " do
         @a.divmod(42).should == [29394473594944150, 21]
     end
