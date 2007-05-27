@@ -77,6 +77,10 @@ describe LibTom::Math::Bignum, "conversions" do
         @bn.class.ancestors.should include(Numeric)
     end
 
+    it "should have Comparable as an ancestor" do
+        @bn.class.ancestors.should include(Comparable)
+    end
+
     it "should convert an Integer to Bignum correctly" do
         c = LibTom::Math::Bignum.new(42)
         c.should == 42
@@ -312,5 +316,51 @@ describe LibTom::Math::Bignum, "utility operations" do
 
     it "should convert to a Float (negative num)" do
         (-@a).to_f.should == -@float
+    end
+
+    it "should compare against other numbers - big < big" do
+        @a.should < @b
+    end
+    
+    it "should compare against other numbers - big > big" do
+        @b.should > @a 
+    end
+    
+    it "should compare against other numbers - big < int " do
+        LibTom::Math::Bignum.new(42).should <  64
+    end
+    
+    it "should compare against other numbers - big > int " do
+        @a.should > 42 
+    end
+
+    it "should be able to detect nonzero via nonzero?" do
+        @a.should be_nonzero
+    end
+
+    it "should be able to detect zero via nonzero?" do
+        LibTom::Math::Bignum.new(0).should_not be_nonzero
+    end
+
+    it "should be able to detect nonzero via zero?" do
+        @a.should_not be_zero
+    end
+
+    it "should be able to detect zero via nonzero?" do
+        LibTom::Math::Bignum.new(0).should be_zero
+    end
+
+    it "should be able to zero itself out" do
+        @a.zero!
+        @a.should be_zero
+    end
+
+    it "should hash appropriately" do
+        @a.hash.should_not equal(@b.hash)
+    end
+
+    it "should match hashes on same numbers" do
+        c = @a.dup
+        c.hash.should equal(@a.hash)
     end
 end

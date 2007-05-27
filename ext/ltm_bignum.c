@@ -639,6 +639,124 @@ static VALUE ltm_bignum_to_f(VALUE self)
     return rb_float_new(f);
 }
 
+/*
+ * spaceship operator used by Comparable
+ */
+static VALUE ltm_bignum_spaceship(VALUE self, VALUE other)
+{
+    mp_int *a = MP_INT(self);
+    mp_int *b;
+
+    if (IS_LTM_BIGNUM(other)) {
+        b = MP_INT(other);
+    } else {
+        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
+    }
+    
+    switch (mp_cmp(a,b)) {
+        case MP_LT:
+            return INT2FIX(-1);
+            break;
+        case MP_EQ:
+            return INT2FIX(0);
+            break;
+        case MP_GT:
+            return INT2FIX(1);
+            break;
+        default:
+            rb_raise(cLT_M_Bignum,"libtommath API error, mp_cmp returned invalid");
+            break;
+    }
+
+}
+
+
+/*
+ * call-seq:
+ *  a.nonzero?
+ *
+ */
+static VALUE ltm_bignum_nonzero(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+
+    return (mp_iszero(a) ? Qfalse : Qtrue );
+}
+
+/*
+ * call-seq:
+ *  a.zero?
+ *
+ */
+static VALUE ltm_bignum_zero(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+
+    return (mp_iszero(a) ? Qtrue : Qfalse);
+}
+
+/*
+ * call-seq:
+ *  a.zero!
+ *
+ * destroy the contents of the Bignum and make it Zero
+ */
+static VALUE ltm_bignum_zero_bang(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+    
+    mp_zero(a);
+
+    return self;
+}
+
+
+/*
+ * call-seq:
+ *  a.even?
+ *
+ */
+static VALUE ltm_bignum_even(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+
+    return (mp_iseven(a) ? Qtrue : Qfalse);
+}
+
+
+/*
+ * call-seq:
+ *  a.odd?
+ *
+ */
+static VALUE ltm_bignum_odd(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+
+    return (mp_isodd(a) ? Qtrue : Qfalse);
+}
+
+
+/*
+ * call-seq:
+ *  a.hash
+ *
+ *  formulate a hash value based on the content of the Bignum
+ */
+static VALUE ltm_bignum_hash(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+    long key = 0L;
+    int len = a->alloc; /* found this by reading the libtommath source */
+    int i;
+
+    /* pulled this hash algorithm from ruby's bignum.c */
+    for (i = 0 ; i < len; i++) {
+        key ^= (long)DIGIT(a,i);
+    }
+    return LONG2FIX(key);
+}
+
 
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
@@ -839,11 +957,13 @@ void Init_libtommath()
     /* utility methods */
     rb_define_method(cLT_M_Bignum, "size",ltm_bignum_size, 0);
     rb_define_method(cLT_M_Bignum, "to_f",ltm_bignum_to_f, 0);
-    /*
-       rb_define_method(cLT_M_Bignum, "<=>",        ltm_bignum_cmp, 1);
-       rb_define_method(cLT_M_Bignum, "hash",       ltm_bignum_hash, 0);
-       rb_define_mothod(cLT_M_Bignum, "nonzero?",   ltm_bignum_nonzero,0);
-    */
+    rb_define_method(cLT_M_Bignum, "<=>", ltm_bignum_spaceship, 1);
+    rb_define_method(cLT_M_Bignum, "even?",ltm_bignum_even, 0);
+    rb_define_method(cLT_M_Bignum, "odd?",ltm_bignum_odd, 0);
+    rb_define_method(cLT_M_Bignum, "nonzero?",ltm_bignum_nonzero,0);
+    rb_define_method(cLT_M_Bignum, "zero?",ltm_bignum_zero,0);
+    rb_define_method(cLT_M_Bignum, "zero!",ltm_bignum_zero_bang,0);
+    rb_define_method(cLT_M_Bignum, "hash",ltm_bignum_hash, 0);
 
     /* logical / bitwise  operators */
     /*
