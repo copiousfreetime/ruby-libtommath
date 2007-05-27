@@ -459,4 +459,9 @@ describe LibTom::Math::Bignum, "Bonus methods" do
     it "can do a = b module 2**d" do
         @b.modulo_pow2(12).should == 277
     end
+
+    it "can generate random numbers with minimum bit length" do
+        p = LibTom::Math::rand_of_size(1024)
+        p.num_bits.should >= 1024
+    end
 end

@@ -1078,6 +1078,28 @@ static VALUE ltm_bignum_modulo_2d(VALUE self, VALUE other)
 }
 
 
+/*
+ * call-seq:
+ *  LibTom::Math.rand_of_size(n)
+ *
+ *  returns a pseudo random Bignum of at least N bits.
+ */
+static VALUE ltm_rand_of_size(VALUE self, VALUE other)
+{
+    VALUE result    = ALLOC_LTM_BIGNUM;
+    mp_int *a       = MP_INT(result);
+    double num_bits = NUM2DBL(other);
+    int num_digits  = (int)ceil(num_bits / MP_DIGIT_BIT);
+    int mp_result;
+
+    if (MP_OKAY != (mp_result = mp_rand(a,num_digits))) {
+        rb_raise(eLT_M_Error, "Failure calculating rand with %d bits: %s\n",
+            num_bits,mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1246,6 +1268,7 @@ void Init_libtommath()
     /* 2**d */
     rb_define_module_function(mLT_M,"pow2",ltm_two_to_the,1);
     rb_define_module_function(mLT_M,"two_to_the",ltm_two_to_the,1);
+    rb_define_module_function(mLT_M,"rand_of_size",ltm_rand_of_size,1);
 
     /* exception definition */
     eLT_M_Error = rb_define_class_under(mLT_M,"LTMathError",rb_eStandardError);
