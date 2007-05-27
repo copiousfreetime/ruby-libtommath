@@ -8,11 +8,6 @@ typedef struct  {
 typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 
 
-/* ---> digit manipulation <--- */
-
-/* makes a pseudo-random int of a given size */
-int mp_rand(mp_int *a, int digits);
-
 /* ---> number theory <--- */
 
 /* d = a + b (mod c) */

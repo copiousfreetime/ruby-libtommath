@@ -34,6 +34,7 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other);
 #define IS_LTM_BIGNUM(obj) (Qtrue == rb_obj_is_instance_of(obj,cLT_M_Bignum))
 #define ALLOC_LTM_BIGNUM (ltm_bignum_alloc(cLT_M_Bignum))
 #define NEW_LTM_BIGNUM_FROM(other) (rb_class_new_instance(1,&other,cLT_M_Bignum))
+#define NUM2MP_INT(obj) (num_to_mp_int(obj))
 #define IS_2(obj) (Qtrue == is_2(obj))
 
 /**********************************************************************
@@ -60,7 +61,25 @@ char * mp_int_to_s(mp_int *a)
     return mp_str;
 }
 #endif
- 
+
+
+/*
+ * extract mp_int from any number, includes conversion to a temporary
+ * Bignum if necessary.
+ */
+mp_int* num_to_mp_int(VALUE i)
+{
+    mp_int* result;
+
+    if (IS_LTM_BIGNUM(i)) {
+        result = MP_INT(i);
+    } else {
+        result = MP_INT(NEW_LTM_BIGNUM_FROM(i));
+    }
+    return result;
+}
+
+
 /*
  * See if the given Value has the integer value 2
  */
@@ -213,17 +232,11 @@ static VALUE ltm_bignum_abs(VALUE self)
 static VALUE ltm_bignum_add(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
-    mp_int *b;
+    mp_int *b = NUM2MP_INT(other);
     mp_int *c;
 
     VALUE result = ALLOC_LTM_BIGNUM;
     int mp_result = MP_OKAY;
-
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
 
     c = MP_INT(result);
 
@@ -245,17 +258,11 @@ static VALUE ltm_bignum_add(VALUE self, VALUE other)
 static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
-    mp_int *b;
+    mp_int *b = NUM2MP_INT(other);
     mp_int *c;
 
     VALUE result = ALLOC_LTM_BIGNUM;
     int mp_result = MP_OKAY;
-
-    if (IS_LTM_BIGNUM(other)) {
-        b = MP_INT(other);
-    } else {
-        b = MP_INT(NEW_LTM_BIGNUM_FROM(other));
-    }
 
     c = MP_INT(result);
 
@@ -277,19 +284,8 @@ static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
  */
 static VALUE ltm_bignum_eq(VALUE self, VALUE other)
 {
-    mp_int *a; 
-    mp_int *b;  
-    VALUE param;
-
-    a = MP_INT(self);
-
-    if (IS_LTM_BIGNUM(other)) {
-        param = other;
-    } else {
-        param = NEW_LTM_BIGNUM_FROM(other);
-    }
-
-    b = MP_INT(param);
+    mp_int *a = MP_INT(self);
+    mp_int *b = NUM2MP_INT(other);  
 
     if (MP_EQ == mp_cmp(a,b)) {
         return Qtrue;
@@ -1100,6 +1096,29 @@ static VALUE ltm_rand_of_size(VALUE self, VALUE other)
 }
 
 
+/*
+ * call-seq:
+ *  a.addmod(b,c) -> Bignum
+ *
+ *  returns a + b mod c
+ */
+static VALUE ltm_bignum_add_modulus(VALUE self, VALUE p1, VALUE p2)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    mp_int *c    = NUM2MP_INT(p2);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *d    = MP_INT(result);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_addmod(a,b,c,d))) {
+        rb_raise(eLT_M_Error, "Failure calculating add_modulos: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1329,7 +1348,6 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum, "[]",ltm_bignum_bit_ref, 1);
 
     /* Additional methods that are provide by libtommath */
-    /* right shift by "b" digits */
     rb_define_method(cLT_M_Bignum,"right_shift_digits",ltm_bignum_right_shift_digits,1);
     rb_define_method(cLT_M_Bignum,"divide_by_x_pow_b",ltm_bignum_right_shift_digits,1);
     rb_define_method(cLT_M_Bignum,"left_shift_digits",ltm_bignum_left_shift_digits,1);
@@ -1340,6 +1358,13 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"mod_pow2",ltm_bignum_modulo_2d,1);
     rb_define_method(cLT_M_Bignum,"mod_2d",ltm_bignum_modulo_2d,1);
 
+    rb_define_method(cLT_M_Bignum,"add_modulus",ltm_bignum_add_modulus,2);
+    /*
+    rb_define_method(cLT_M_Bignum,"sub_modulus",ltm_bignum_add_modulus,2);
+    rb_define_method(cLT_M_Bignum,"multiply_modulus",ltm_bignum_add_modulus,2);
+    rb_define_method(cLT_M_Bignum,"square_modulus",ltm_bignum_add_modulus,1);
+    rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_add_modulus,1);
+    */
 
     /* additional methods that are provided by libtommath */
     /* Prime number methods */
