@@ -425,4 +425,38 @@ describe LibTom::Math::Bignum, "bitwise operations" do
     it "should NOT implement bit refencing - NOT IMPLEMENTED " do
         lambda { @a[0] }.should raise_error(NotImplementedError);
     end
+
+    it "should return the number of bits in the internal representation" do
+        @a.num_bits.should == 61
+    end
+end
+
+describe LibTom::Math::Bignum, "Bonus methods" do 
+    before(:each) do
+        @a = LibTom::Math::Bignum.new(1234567890987654321)
+        @b = LibTom::Math::Bignum.new(9876543210123456789)
+        @c = 1234567890987654321
+        @d = 9876543210123456789
+    end
+
+    it "should right shift 'digits'" do
+        @a.right_shift_digits(2).should == 17
+    end
+
+    it "should left shift 'digits'" do
+        LibTom::Math::Bignum.new(17).left_shift_digits(2).should == 1224979098644774912
+    end
+
+    it "can calculate massive powers of 2" do
+        p = LibTom::Math.two_to_the(128)
+        p.should == 340282366920938463463374607431768211456 
+    end
+
+    it "can square a Bignum" do
+        @b.squared.should == (9876543210123456789 * 9876543210123456789)
+    end
+
+    it "can do a = b module 2**d" do
+        @b.modulo_pow2(12).should == 277
+    end
 end

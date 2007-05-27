@@ -942,6 +942,142 @@ static VALUE ltm_bignum_bit_ref(VALUE self)
     return self;
 }
 
+
+/*
+ * call-seq:
+ *  a.num_bits
+ *
+ * return the number of bits used in representing the Bignum
+ */
+static VALUE ltm_bignum_num_bits(VALUE self)
+{
+    mp_int *a = MP_INT(self);
+    return INT2FIX(mp_count_bits(a));
+}
+
+
+/*
+ * call-seq:
+ *  a.right_shift_digits(n)
+ *
+ * shift n digits to the right.  This divides a by x**b
+ */
+static VALUE ltm_bignum_right_shift_digits(VALUE self, VALUE other)
+{
+    mp_int *a       = MP_INT(self);
+    VALUE result    = ALLOC_LTM_BIGNUM;
+    mp_int *b       = MP_INT(result);
+    int shift_width = NUM2INT(other);
+    int mp_result;
+
+    /* copy a into b to start */;
+    if (MP_OKAY != (mp_result = mp_copy(a,b))) {
+        rb_raise(eLT_M_Error, "Failure right shift of %d digits on Bignum: %s", 
+            shift_width,mp_error_to_string(mp_result));
+    }
+
+    /* do some shifting, no return code on a right shift, it cannot
+     * fail (at least according to the documentation) 
+     */
+    mp_rshd(b,shift_width);
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.left_shift_digits(n)
+ *
+ * shift n digits to the left.  This multiplies a by x**b
+ */
+static VALUE ltm_bignum_left_shift_digits(VALUE self, VALUE other)
+{
+    mp_int *a       = MP_INT(self);
+    VALUE result    = ALLOC_LTM_BIGNUM;
+    mp_int *b       = MP_INT(result);
+    int shift_width = NUM2INT(other);
+    int mp_result;
+
+    /* copy a into b to start */;
+    if (MP_OKAY != (mp_result = mp_copy(a,b))) {
+        rb_raise(eLT_M_Error, "Failure left shift of %d digits on Bignum: %s", 
+            shift_width,mp_error_to_string(mp_result));
+    }
+
+    /* do some shifting */
+    if (MP_OKAY != (mp_result = mp_lshd(b,shift_width))) {
+        rb_raise(eLT_M_Error, "Failure left shift of %d digits on Bignum: %s", 
+            shift_width,mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  LibTom::Math.pow2(n)
+ *
+ *  returns the value of 2**n as a Bignum
+ */
+static VALUE ltm_two_to_the(VALUE self, VALUE other)
+{
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *a    = MP_INT(result);
+    int power    = NUM2INT(other);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_2expt(a,power))) {
+        rb_raise(eLT_M_Error, "Failure calculating 2**%d : %s\n",
+            power,mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.squared
+ *
+ * returns a**2
+ */
+static VALUE ltm_bignum_squared(VALUE self)
+{
+    mp_int *a    = MP_INT(self);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *b    = MP_INT(result);
+    int mp_result ;
+
+    if (MP_OKAY != (mp_result = mp_sqr(a,b))) {
+        rb_raise(eLT_M_Error, "Failure squaring Bignum : %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.modulo_2d(d)
+ *
+ * returns a mod (2**d)
+ */
+static VALUE ltm_bignum_modulo_2d(VALUE self, VALUE other)
+{
+    mp_int *a       = MP_INT(self);
+    int power_of_2  = NUM2INT(other); 
+    VALUE result    = ALLOC_LTM_BIGNUM;
+    mp_int *b       = MP_INT(result);
+    int mp_result ;
+
+    if (MP_OKAY != (mp_result = mp_mod_2d(a,power_of_2,b))) {
+        rb_raise(eLT_M_Error, "Failure modulo_2d of Bignum: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1106,6 +1242,10 @@ void Init_libtommath()
     /* module definitions */
     mLT = rb_define_module("LibTom");
     mLT_M = rb_define_module_under(mLT,"Math");
+    
+    /* 2**d */
+    rb_define_module_function(mLT_M,"pow2",ltm_two_to_the,1);
+    rb_define_module_function(mLT_M,"two_to_the",ltm_two_to_the,1);
 
     /* exception definition */
     eLT_M_Error = rb_define_class_under(mLT_M,"LTMathError",rb_eStandardError);
@@ -1147,6 +1287,7 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum, "zero?",ltm_bignum_zero,0);
     rb_define_method(cLT_M_Bignum, "zero!",ltm_bignum_zero_bang,0);
     rb_define_method(cLT_M_Bignum, "hash",ltm_bignum_hash, 0);
+    rb_define_method(cLT_M_Bignum, "num_bits",ltm_bignum_num_bits,0);
 
     /* logical / bitwise  operators */
     rb_define_method(cLT_M_Bignum, "&",ltm_bignum_bit_and, 1);
@@ -1163,6 +1304,18 @@ void Init_libtommath()
      */
     rb_define_method(cLT_M_Bignum, "~",ltm_bignum_bit_negation, 0);
     rb_define_method(cLT_M_Bignum, "[]",ltm_bignum_bit_ref, 1);
+
+    /* Additional methods that are provide by libtommath */
+    /* right shift by "b" digits */
+    rb_define_method(cLT_M_Bignum,"right_shift_digits",ltm_bignum_right_shift_digits,1);
+    rb_define_method(cLT_M_Bignum,"divide_by_x_pow_b",ltm_bignum_right_shift_digits,1);
+    rb_define_method(cLT_M_Bignum,"left_shift_digits",ltm_bignum_left_shift_digits,1);
+    rb_define_method(cLT_M_Bignum,"multiply_by_x_pow_b",ltm_bignum_right_shift_digits,1);
+    rb_define_method(cLT_M_Bignum,"squared",ltm_bignum_squared,0);
+    rb_define_method(cLT_M_Bignum,"modulo_pow2",ltm_bignum_modulo_2d,1);
+    rb_define_method(cLT_M_Bignum,"modulo_2d",ltm_bignum_modulo_2d,1);
+    rb_define_method(cLT_M_Bignum,"mod_pow2",ltm_bignum_modulo_2d,1);
+    rb_define_method(cLT_M_Bignum,"mod_2d",ltm_bignum_modulo_2d,1);
 
 
     /* additional methods that are provided by libtommath */

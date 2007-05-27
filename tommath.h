@@ -8,37 +8,10 @@ typedef struct  {
 typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 
 
-
 /* ---> digit manipulation <--- */
-
-/* right shift by "b" digits */
-void mp_rshd(mp_int *a, int b);
-
-/* left shift by "b" digits */
-int mp_lshd(mp_int *a, int b);
-
-/* c = a / 2**b */
-int mp_div_2d(mp_int *a, int b, mp_int *c, mp_int *d);
-
-/* c = a * 2**b */
-int mp_mul_2d(mp_int *a, int b, mp_int *c);
-
-/* c = a mod 2**d */
-int mp_mod_2d(mp_int *a, int b, mp_int *c);
-
-/* computes a = 2**b */
-int mp_2expt(mp_int *a, int b);
-
-/* Counts the number of lsbs which are zero before the first zero bit */
-int mp_cnt_lsb(mp_int *a);
-
-/* I Love Earth! */
 
 /* makes a pseudo-random int of a given size */
 int mp_rand(mp_int *a, int digits);
-
-/* b = a*a  */
-int mp_sqr(mp_int *a, mp_int *b);
 
 /* ---> number theory <--- */
 
@@ -189,7 +162,4 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
  *
  */
 int mp_prime_random_ex(mp_int *a, int t, int size, int flags, ltm_prime_callback cb, void *dat);
-
-/* ---> radix conversion <--- */
-int mp_count_bits(mp_int *a);
 
