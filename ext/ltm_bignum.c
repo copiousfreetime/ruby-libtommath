@@ -1119,7 +1119,26 @@ static VALUE ltm_bignum_square_modulus(VALUE self, VALUE p1)
     return result;
 }
 
-
+/*
+ * call-seq:
+ *  a.inverse_modulus(b,c) -> Bignum
+ *
+ *  returns (1/a) mod c
+ */
+static VALUE ltm_bignum_inverse_modulus(VALUE self, VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_invmod(a,b,c))) {
+        rb_raise(eLT_M_Error, "Failure calculating inverse_modulus: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1363,9 +1382,7 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"subtract_modulus",ltm_bignum_subtract_modulus,2);
     rb_define_method(cLT_M_Bignum,"multiply_modulus",ltm_bignum_multiply_modulus,2);
     rb_define_method(cLT_M_Bignum,"square_modulus",ltm_bignum_square_modulus,1);
-    /*
-    rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_add_modulus,1);
-    */
+    rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_inverse_modulus,1);
 
     /* additional methods that are provided by libtommath */
     /* Prime number methods */

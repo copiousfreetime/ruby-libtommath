@@ -10,18 +10,6 @@ typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 
 /* ---> number theory <--- */
 
-/* d = a + b (mod c) */
-int mp_addmod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
-
-/* d = a - b (mod c) */
-int mp_submod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
-
-/* d = a * b (mod c) */
-int mp_mulmod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
-
-/* c = a * a (mod b) */
-int mp_sqrmod(mp_int *a, mp_int *b, mp_int *c);
-
 /* c = 1/a (mod b) */
 int mp_invmod(mp_int *a, mp_int *b, mp_int *c);
 
