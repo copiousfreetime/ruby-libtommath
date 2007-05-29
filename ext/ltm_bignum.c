@@ -1119,6 +1119,7 @@ static VALUE ltm_bignum_square_modulus(VALUE self, VALUE p1)
     return result;
 }
 
+
 /*
  * call-seq:
  *  a.inverse_modulus(b,c) -> Bignum
@@ -1139,6 +1140,52 @@ static VALUE ltm_bignum_inverse_modulus(VALUE self, VALUE p1)
     }
     return result;
 }
+
+
+/*
+ * call-seq:
+ *  a.gcd(b) -> Bignum
+ *
+ *  returns The greatest common divisor of the two numbers
+ */
+static VALUE ltm_bignum_greatest_common_divisor(VALUE self, VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_gcd(a,b,c))) {
+        rb_raise(eLT_M_Error, "Failure calculating greatest common divisor: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.lcm(b) -> Bignum
+ *
+ *  returns The least common multiple of the two numbers
+ */
+static VALUE ltm_bignum_least_common_multiple(VALUE self, VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_lcm(a,b,c))) {
+        rb_raise(eLT_M_Error, "Failure calculating least common multiple: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1383,6 +1430,10 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"multiply_modulus",ltm_bignum_multiply_modulus,2);
     rb_define_method(cLT_M_Bignum,"square_modulus",ltm_bignum_square_modulus,1);
     rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_inverse_modulus,1);
+    rb_define_method(cLT_M_Bignum,"greatest_common_divisor",ltm_bignum_greatest_common_divisor,1);
+    rb_define_method(cLT_M_Bignum,"gcd",ltm_bignum_greatest_common_divisor,1);
+    rb_define_method(cLT_M_Bignum,"least_common_multiple",ltm_bignum_least_common_multiple,1);
+    rb_define_method(cLT_M_Bignum,"lcm",ltm_bignum_least_common_multiple,1);
 
     /* additional methods that are provided by libtommath */
     /* Prime number methods */
@@ -1397,7 +1448,6 @@ void Init_libtommath()
 
     /*
      * extended euclidian
-     * greatest common divisor
      * least common multiple
      * jacobi symbol
      * modular inverse

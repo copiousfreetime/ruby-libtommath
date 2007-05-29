@@ -499,4 +499,13 @@ describe LibTom::Math::Bignum, "Bonus methods" do
         s.inverse_modulus(11).should == 3
     end
 
+    it "should find the greatest common divisor" do
+        s = LibTom::Math::Bignum.new(42)
+        s.gcd(56).should == 14
+    end
+
+    it "should find the least common multiple" do
+        s = LibTom::Math::Bignum.new(6)
+        s.lcm(21) == 42
+    end
 end

@@ -10,17 +10,9 @@ typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 
 /* ---> number theory <--- */
 
-/* c = 1/a (mod b) */
-int mp_invmod(mp_int *a, mp_int *b, mp_int *c);
-
-/* c = (a, b) */
-int mp_gcd(mp_int *a, mp_int *b, mp_int *c);
 
 /* produces value such that U1*a + U2*b = U3 */
 int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3);
-
-/* c = [a, b] or (a*b)/(a, b) */
-int mp_lcm(mp_int *a, mp_int *b, mp_int *c);
 
 /* finds one of the b'th root of a, such that |c|**b <= |a|
  *
