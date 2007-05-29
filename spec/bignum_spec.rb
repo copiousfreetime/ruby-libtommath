@@ -495,7 +495,8 @@ describe LibTom::Math::Bignum, "Bonus methods" do
     end
 
     it "should do c = (1/a) mod b" do
-        puts @a.inverse_modulus(7)
+        s = LibTom::Math::Bignum.new(4)
+        s.inverse_modulus(11).should == 3
     end
 
 end
