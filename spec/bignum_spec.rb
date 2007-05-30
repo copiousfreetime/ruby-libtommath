@@ -544,3 +544,25 @@ describe LibTom::Math::Bignum, "Bonus methods" do
         s.should_not be_is_square
     end
 end
+describe LibTom::Math::Bignum, "Prime Number Methods" do
+    it "should administer a fermat primality test and get true " do
+        a = LibTom::Math::Bignum.new(13)
+        a.should be_passes_fermat_primality(4)
+    end
+
+    it "should administer a fermat primality test and get false" do
+        a = LibTom::Math::Bignum.new(42)
+        a.should_not be_passes_fermat_primality(4)
+    end
+
+    it "should check if a number is prime by dividing it by some primes and get true" do
+        a = LibTom::Math::Bignum.new(1619**2)
+        a.should be_divisible_by_some_primes
+    end
+    
+    it "should check if a number is prime by dividing it by some primes and get false" do
+        a = LibTom::Math::Bignum.new(104729)
+        a.should_not be_divisible_by_some_primes
+    end
+
+end

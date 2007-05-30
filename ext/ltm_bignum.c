@@ -1342,6 +1342,59 @@ static VALUE ltm_bignum_is_square(VALUE self)
 }
 
 
+/*
+ * call-seq:
+ *  a.divisible_by_some_primes? -> true or false
+ *
+ * Attempts to divide a by a known list of primes and returns if a is
+ * divisible by that list of know primes.  The default list is the first
+ * 256 primes.
+ */
+static VALUE ltm_bignum_divisible_by_some_primes(VALUE self)
+{
+    mp_int *a    = MP_INT(self);
+    int is_prime;
+    int mp_result;
+  
+    if (MP_OKAY != (mp_result = mp_prime_is_divisible(a,&is_prime))) {
+        rb_raise(eLT_M_Error, "Failure calculating if num is divisible by some primes: %s\n",
+            mp_error_to_string(mp_result));
+    }
+
+    return (is_prime == 0) ? Qfalse : Qtrue; 
+}
+
+
+/*
+ * call-seq:
+ *  a.passes_fermat_primality?(b) -> true or false
+ *  
+ *  Does 1 run of the Fermat Primality Test.  It tests:
+ *
+ *      b**a mod a == b
+ *
+ *  and returns true or false based upon the result.  A return value of
+ *  true does not mean that a is prime it means that a is "probably"
+ *  prime.
+ *  
+ */
+static VALUE ltm_bignum_passes_fermat_primality(VALUE self,VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    
+    int passed;
+    int mp_result;
+  
+    if (MP_OKAY != (mp_result = mp_prime_fermat(a,b,&passed))) {
+        rb_raise(eLT_M_Error, "Failure running fermat primality test %s\n",
+            mp_error_to_string(mp_result));
+    }
+
+    return (passed == 0) ? Qfalse : Qtrue; 
+}
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1598,10 +1651,10 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"jacobi",ltm_bignum_jacobi,1);
 
 
-    /* additional methods that are provided by libtommath */
     /* Prime number methods */
+    rb_define_method(cLT_M_Bignum,"passes_fermat_primality?",ltm_bignum_passes_fermat_primality,1);
+    rb_define_method(cLT_M_Bignum,"divisible_by_some_primes?",ltm_bignum_divisible_by_some_primes,0);
     /* prime is divisible
-     * fermat test
      * miller-rabin test
      * is_prime?
      * next_prime
