@@ -1144,6 +1144,29 @@ static VALUE ltm_bignum_inverse_modulus(VALUE self, VALUE p1)
 
 /*
  * call-seq:
+ *  a.exponent_modulus(b,c) -> Bignum
+ *
+ *  returns (a ** b) mod c
+ */
+static VALUE ltm_bignum_exponent_modulus(VALUE self, VALUE p1, VALUE p2)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    mp_int *c    = NUM2MP_INT(p2);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *d    = MP_INT(result);
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_exptmod(a,b,c,d))) {
+        rb_raise(eLT_M_Error, "Failure calculating exponent_modulus: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return result;
+}
+
+
+/*
+ * call-seq:
  *  a.gcd(b) -> Bignum
  *
  *  returns The greatest common divisor of the two numbers
@@ -1183,6 +1206,82 @@ static VALUE ltm_bignum_least_common_multiple(VALUE self, VALUE p1)
             mp_error_to_string(mp_result));
     }
     return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.nth_root(b) -> Bignum
+ *
+ *  returns The N'th root of a.  b cannot be < 0 and even.  If no
+ *  perfect integer root is found it returns c such that |c|**b <= |a|
+ *
+ *  Not very efficient for b > 3 on numbers with more than 1000 bits.
+ */
+static VALUE ltm_bignum_nth_root(VALUE self, VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    int b        = NUM2INT(p1);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *c    = MP_INT(result);
+    int mp_result;
+  
+    /* if b is 2 then call the quicker square root function */
+    if (2 == b) {
+        if (MP_OKAY != (mp_result = mp_sqrt(a,c))) {
+            rb_raise(eLT_M_Error, "Failure calculating nth_root(%d): %s\n",
+                b,mp_error_to_string(mp_result));
+        }
+    } else {
+        if (MP_OKAY != (mp_result = mp_n_root(a,(mp_digit)b,c))) {
+            rb_raise(eLT_M_Error, "Failure calculating nth_root(%d): %s\n",
+                b,mp_error_to_string(mp_result));
+        }
+    }
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.square_root -> Bignum
+ *
+ *  returns b such that |b|**2 <= |a|
+ */
+static VALUE ltm_bignum_square_root(VALUE self)
+{
+    mp_int *a    = MP_INT(self);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *b    = MP_INT(result);
+    int mp_result;
+  
+    if (MP_OKAY != (mp_result = mp_sqrt(a,b))) {
+        rb_raise(eLT_M_Error, "Failure calculating square root : %s\n",
+            mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.is_square? -> Bignum
+ *
+ *  returns true if a is a square and false otherwise
+ */
+static VALUE ltm_bignum_is_square(VALUE self)
+{
+    mp_int *a    = MP_INT(self);
+    int is_square;
+    int mp_result;
+  
+    if (MP_OKAY != (mp_result = mp_is_square(a,&is_square))) {
+        rb_raise(eLT_M_Error, "Failure calculating is_square: %s\n",
+            mp_error_to_string(mp_result));
+    }
+
+    return (is_square == 0) ? Qfalse : Qtrue; 
 }
 
 
@@ -1429,11 +1528,15 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"subtract_modulus",ltm_bignum_subtract_modulus,2);
     rb_define_method(cLT_M_Bignum,"multiply_modulus",ltm_bignum_multiply_modulus,2);
     rb_define_method(cLT_M_Bignum,"square_modulus",ltm_bignum_square_modulus,1);
+    rb_define_method(cLT_M_Bignum,"exponent_modulus",ltm_bignum_exponent_modulus,2);
     rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_inverse_modulus,1);
     rb_define_method(cLT_M_Bignum,"greatest_common_divisor",ltm_bignum_greatest_common_divisor,1);
     rb_define_method(cLT_M_Bignum,"gcd",ltm_bignum_greatest_common_divisor,1);
     rb_define_method(cLT_M_Bignum,"least_common_multiple",ltm_bignum_least_common_multiple,1);
     rb_define_method(cLT_M_Bignum,"lcm",ltm_bignum_least_common_multiple,1);
+    rb_define_method(cLT_M_Bignum,"nth_root",ltm_bignum_nth_root,1);
+    rb_define_method(cLT_M_Bignum,"square_root",ltm_bignum_square_root,0);
+    rb_define_method(cLT_M_Bignum,"is_square?",ltm_bignum_is_square,0);
 
     /* additional methods that are provided by libtommath */
     /* Prime number methods */

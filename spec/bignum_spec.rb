@@ -489,10 +489,15 @@ describe LibTom::Math::Bignum, "Bonus methods" do
     it "should do d = (a * b) mod c" do
         @a.multiply_modulus(@b,42).should == ((@c * @d) % 42)
     end
-
-    it "should do c = (a *a) mod b" do
+    
+    it "should do c = (a ** 2) mod b" do
         @a.square_modulus(42).should == ((@c * @c) % 42)
     end
+    
+    it "should do d = (a ** b) mod c" do
+        @a.exponent_modulus(42,4321).should == ((@c ** 42) % 4321)
+    end
+
 
     it "should do c = (1/a) mod b" do
         s = LibTom::Math::Bignum.new(4)
@@ -507,5 +512,26 @@ describe LibTom::Math::Bignum, "Bonus methods" do
     it "should find the least common multiple" do
         s = LibTom::Math::Bignum.new(6)
         s.lcm(21) == 42
+    end
+
+    it "should find the nth root of a number" do
+        s = LibTom::Math::Bignum.new(9513149571461376)
+        s.nth_root(4).should == 9876
+    end
+
+    it "should find the square root of a number" do
+        s = LibTom::Math::Bignum.new(1764)
+        s.square_root.should == 42
+    end
+
+    it "should tell if a number is a square" do
+        s = LibTom::Math::Bignum.new(2048**2)
+        s.should be_is_square
+    end
+
+    it "should say if a number is not a square" do
+        s = LibTom::Math::Bignum.new(2)
+        s = (s**21701)-1
+        s.should_not be_is_square
     end
 end

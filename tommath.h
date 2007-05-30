@@ -14,18 +14,6 @@ typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 /* produces value such that U1*a + U2*b = U3 */
 int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3);
 
-/* finds one of the b'th root of a, such that |c|**b <= |a|
- *
- * returns error if a < 0 and b is even
- */
-int mp_n_root(mp_int *a, mp_digit b, mp_int *c);
-
-/* special sqrt algo */
-int mp_sqrt(mp_int *arg, mp_int *ret);
-
-/* is number a square? */
-int mp_is_square(mp_int *arg, int *ret);
-
 /* computes the jacobi c = (a | n) (or Legendre if b is prime)  */
 int mp_jacobi(mp_int *a, mp_int *n, int *c);
 
@@ -76,9 +64,6 @@ int mp_reduce_2k_setup_l(mp_int *a, mp_int *d);
 
 /* reduces a modulo b where b is of the form 2**p - k [0 <= a] */
 int mp_reduce_2k_l(mp_int *a, mp_int *n, mp_int *d);
-
-/* d = a**b (mod c) */
-int mp_exptmod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
 
 /* performs one Fermat test of "a" using base "b".
  * Sets result to 0 if composite or 1 if probable prime
