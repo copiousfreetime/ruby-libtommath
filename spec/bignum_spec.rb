@@ -619,7 +619,7 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         p_list = []
         a_list = []
         1_000.times do 
-            a_list << b = b.next_prime
+            a_list << a = a.next_prime
             p_list << p.succ
         end
         a_list.should == p_list
