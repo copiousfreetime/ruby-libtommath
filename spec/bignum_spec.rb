@@ -509,9 +509,18 @@ describe LibTom::Math::Bignum, "Bonus methods" do
         s.gcd(56).should == 14
     end
 
+    it "should use the extended euclidian algorithm" do
+        a = LibTom::Math::Bignum.new(120)
+        a.extended_euclidian(23).should == [-9,47,1]
+    end
+
     it "should find the least common multiple" do
         s = LibTom::Math::Bignum.new(6)
         s.lcm(21) == 42
+    end
+
+    it "should compute the jacobi symbol of a number " do
+        @a.jacobi(42).should == 0
     end
 
     it "should find the nth root of a number" do

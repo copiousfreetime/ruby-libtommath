@@ -11,11 +11,6 @@ typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
 /* ---> number theory <--- */
 
 
-/* produces value such that U1*a + U2*b = U3 */
-int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3);
-
-/* computes the jacobi c = (a | n) (or Legendre if b is prime)  */
-int mp_jacobi(mp_int *a, mp_int *n, int *c);
 
 /* used to setup the Barrett reduction for a given modulus b */
 int mp_reduce_setup(mp_int *a, mp_int *b);

@@ -1167,6 +1167,38 @@ static VALUE ltm_bignum_exponent_modulus(VALUE self, VALUE p1, VALUE p2)
 
 /*
  * call-seq:
+ *  a.extended_euclidian(b) -> Bignum
+ *
+ *  returns an array of 3 Bignums [u1, u2, u3] where
+ *
+ *      u1*a + u2*b = u3
+ */
+static VALUE ltm_bignum_extended_euclidian(VALUE self, VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+
+    VALUE u1     = ALLOC_LTM_BIGNUM;
+    VALUE u2     = ALLOC_LTM_BIGNUM;
+    VALUE u3     = ALLOC_LTM_BIGNUM;
+
+    mp_int *up1  = MP_INT(u1);
+    mp_int *up2  = MP_INT(u2);
+    mp_int *up3  = MP_INT(u3);
+
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_exteuclid(a,b,up1,up2,up3))) {
+        rb_raise(eLT_M_Error, "Failure calculating extended euclidian: %s\n",
+            mp_error_to_string(mp_result));
+    }
+
+    return rb_ary_new3(3,u1,u2,u3);
+}
+
+
+/*
+ * call-seq:
  *  a.gcd(b) -> Bignum
  *
  *  returns The greatest common divisor of the two numbers
@@ -1206,6 +1238,31 @@ static VALUE ltm_bignum_least_common_multiple(VALUE self, VALUE p1)
             mp_error_to_string(mp_result));
     }
     return result;
+}
+
+
+/*
+ * call-seq:
+ *  a.jacobi(p) -> Integer
+ *
+ *  returns The Jacob symbol for a with respect to p.
+ *
+ *      -1 : a is not a quadratic residue modulo p
+ *       0 : a divides p
+ *       1 : a is a quadratic residue modulo p
+ */
+static VALUE ltm_bignum_jacobi(VALUE self, VALUE p)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p);
+    int j_result;
+    int mp_result;
+    
+    if (MP_OKAY != (mp_result = mp_jacobi(a,b,&j_result))) {
+        rb_raise(eLT_M_Error, "Failure calculating jacobi symbol: %s\n",
+            mp_error_to_string(mp_result));
+    }
+    return INT2FIX(j_result);
 }
 
 
@@ -1506,7 +1563,7 @@ void Init_libtommath()
 
     /* Bit wise negation and accessing a single bit as a bit vector, not
      * explicitly supported by libtom math.  They may be able to be
-     * hacked around, but it may not be worth it.  Currently these trow
+     * hacked around, but it may not be worth it.  Currently these throw
      * NotImplementedErrors
      * 
      */
@@ -1532,11 +1589,14 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_inverse_modulus,1);
     rb_define_method(cLT_M_Bignum,"greatest_common_divisor",ltm_bignum_greatest_common_divisor,1);
     rb_define_method(cLT_M_Bignum,"gcd",ltm_bignum_greatest_common_divisor,1);
+    rb_define_method(cLT_M_Bignum,"extended_euclidian",ltm_bignum_extended_euclidian,1);
     rb_define_method(cLT_M_Bignum,"least_common_multiple",ltm_bignum_least_common_multiple,1);
     rb_define_method(cLT_M_Bignum,"lcm",ltm_bignum_least_common_multiple,1);
     rb_define_method(cLT_M_Bignum,"nth_root",ltm_bignum_nth_root,1);
     rb_define_method(cLT_M_Bignum,"square_root",ltm_bignum_square_root,0);
     rb_define_method(cLT_M_Bignum,"is_square?",ltm_bignum_is_square,0);
+    rb_define_method(cLT_M_Bignum,"jacobi",ltm_bignum_jacobi,1);
+
 
     /* additional methods that are provided by libtommath */
     /* Prime number methods */
@@ -1551,8 +1611,5 @@ void Init_libtommath()
 
     /*
      * extended euclidian
-     * least common multiple
-     * jacobi symbol
-     * modular inverse
      */
 }
