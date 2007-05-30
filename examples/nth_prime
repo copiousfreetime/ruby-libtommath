@@ -14,20 +14,14 @@ mathn_prime = Prime.new
 tom_primes  = []
 tom_prime   = LibTom::Math::Bignum.new(1)
 
-tom_prime_2= LibTom::Math::Bignum.new(1)
-
 bm(25) do |x|
 
     x.report("Mathn  #{n} primes") do
-        n.times { mathn_prime.succ }
+        n.times { m_primes << mathn_prime.succ }
     end
 
     x.report("LibTom #{n} primes") do 
-        n.times { tom_prime = tom_prime.next_prime }
-    end
-    
-    x.report("LibTom #{n} primes!") do 
-        n.times { tom_prime_2.next_prime! }
+        n.times { tom_primes << tom_prime = tom_prime.next_prime }
     end
 end
 
