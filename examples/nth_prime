@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+
+$: << "../ext"
+require 'libtommath'
+require 'mathn'
+require 'benchmark'
+include Benchmark
+
+n = ARGV.shift.to_i
+
+m_primes = []
+mathn_prime = Prime.new
+
+tom_primes  = []
+tom_prime   = LibTom::Math::Bignum.new(1)
+
+tom_prime_2= LibTom::Math::Bignum.new(1)
+
+bm(25) do |x|
+
+    x.report("Mathn  #{n} primes") do
+        n.times { mathn_prime.succ }
+    end
+
+    x.report("LibTom #{n} primes") do 
+        n.times { tom_prime = tom_prime.next_prime }
+    end
+    
+    x.report("LibTom #{n} primes!") do 
+        n.times { tom_prime_2.next_prime! }
+    end
+end
+
+puts "m_primes.size   => #{m_primes.size}"
+puts "tom_primes.size => #{tom_primes.size}"
+
+if ( tom_primes != m_primes ) then
+    n.times do |i|
+        puts "#{m_primes[i].to_s.rjust(10)} #{tom_primes[i].to_s.rjust(10)}"
+    end
+else
+    puts "both generated the same numbers"
+end
+

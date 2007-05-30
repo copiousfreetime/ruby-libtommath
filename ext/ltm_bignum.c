@@ -1032,6 +1032,28 @@ static VALUE ltm_rand_of_size(VALUE self, VALUE other)
 
 /*
  * call-seq:
+ *  LibTom::Math.num_miller_rabin_trials(n)
+ *
+ *  returns the number of Miller Rabin trials necessary to get an 2**-96
+ *  or lower probability of failure for a given n-bit size number.
+ */
+static VALUE ltm_num_miller_rabin_trials(VALUE self, VALUE other)
+{
+    int num_bits    = NUM2INT(other);
+    int mp_result;
+
+    /* do not ask me why its rabin_miller here and miller_rabin in the
+     * other method.
+     */
+    mp_result = mp_prime_rabin_miller_trials(num_bits);
+
+    return INT2FIX(mp_result);
+}
+
+
+
+/*
+ * call-seq:
  *  a.add_modulus(b,c) -> Bignum
  *
  *  returns (a + b) mod c
@@ -1395,6 +1417,155 @@ static VALUE ltm_bignum_passes_fermat_primality(VALUE self,VALUE p1)
 }
 
 
+/*
+ * call-seq:
+ *  a.passes_miller_rabin?(b) -> true or false
+ *  
+ *  Does 1 iteration of the Miller-Rabin Test for primality on a using
+ *  base b. It returns true or false based upon the result.  Generally
+ *  many calls to this method with different values of b are required to
+ *  have some level of assurance you have a prime number.
+ */
+static VALUE ltm_bignum_passes_miller_rabin(VALUE self,VALUE p1)
+{
+    mp_int *a    = MP_INT(self);
+    mp_int *b    = NUM2MP_INT(p1);
+    
+    int passed;
+    int mp_result;
+  
+    if (MP_OKAY != (mp_result = mp_prime_fermat(a,b,&passed))) {
+        rb_raise(eLT_M_Error, "Failure running Miller-Rabin test %s\n",
+            mp_error_to_string(mp_result));
+    }
+
+    return (passed == 0) ? Qfalse : Qtrue; 
+}
+
+
+/*
+ * call-seq:
+ *  a.is_prime?(t => default) -> true or false
+ *  
+ *  tests to see if a is prime by doing a trial division followed by t
+ *  rounds of Miller-Rabin tests.  t by default is the number returned
+ *  from num_miller_rabin_trails for the bitsize of a.
+ */
+static VALUE ltm_bignum_is_prime(int argc, VALUE* argv, VALUE self)
+{
+    mp_int *a    = MP_INT(self);
+    int t;       
+    int num_bits;
+    int passed;
+    int mp_result;
+
+    if (argc == 0) {
+        num_bits = mp_count_bits(a);
+        t = mp_prime_rabin_miller_trials(num_bits);
+    } else {
+        t = FIX2INT(argv[0]);
+    }
+
+    /* make sure that t is within a good range.  This is also done in
+     * the mp_prime_is_prime method, but that error message isn't
+     * helpful
+     */
+    if (t > PRIME_SIZE) {
+        rb_raise(rb_eArgError,"Number of Miller-Rabin trials must be > 0 and < %d\n",PRIME_SIZE);
+    }
+
+    if (MP_OKAY != (mp_result = mp_prime_is_prime(a,t,&passed))) {
+        rb_raise(eLT_M_Error, "Failure testing for primality : %s\n",
+            mp_error_to_string(mp_result));
+    }
+  
+    return (passed == 0) ? Qfalse : Qtrue; 
+}
+
+
+/*
+ * call-seq:
+ *  a.next_prime(options => Hash.new) -> Bignum
+ *
+ *  returns the next prime greater than a.  The options can be:
+ *      :trials => N : Number of Miller-Rabin trials the new prime must pass.
+ *                     the default is the same as is_prime?
+ *
+ *      :congruency => true/false : Should the prime be congruent to 3
+ *                                  mod 4, this is false by default.
+ */
+static VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
+{
+    mp_int *a    = MP_INT(self);
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *b    = MP_INT(result);
+
+    VALUE options;
+    int num_bits;
+    int trials     = -1;
+    int trials_option = 0;
+    int congruency = 0;
+    int mp_result;
+    VALUE key;
+    VALUE value;
+
+    /* parse the options */
+    if (argc > 0) {
+        options = argv[0] ;
+        /* check for the :trials and :congruency options */
+        if (rb_obj_is_kind_of(options,rb_cHash)) {
+            key = rb_str_new2("trials");
+            key = rb_funcall(key,rb_intern("to_sym"),0);
+            value = rb_hash_aref(options,key);
+            if (Qnil != value) {
+                trials = NUM2INT(value);
+                trials_option = 1;
+            }
+
+            key = rb_str_new2("congruency");
+            key = rb_funcall(key,rb_intern("to_sym"),0);
+            value = rb_hash_aref(options,key);
+            if (Qnil != value) {
+                congruency = (Qtrue == value) ? 1 : 0;
+            }
+        }
+    }
+    
+    if (!trials_option && (trials <= 0)) {
+        num_bits = mp_count_bits(a);
+        trials = mp_prime_rabin_miller_trials(num_bits);
+    }
+
+    /* make sure that trials is within a good range.  This is also done in
+     * the mp_prime_is_prime method, but that error message isn't
+     * helpful
+     */
+    if (trials_option && (trials < 0 || trials > PRIME_SIZE)) {
+        rb_raise(rb_eArgError,"Number of Miller-Rabin trials must be > 0 and < %d\n",PRIME_SIZE);
+    }
+
+    if (congruency != 0 && congruency != 1) {
+        rb_raise(rb_eArgError,"Congruency must be true or false\n");
+    }
+
+    /* options checked, now find a prime, first we have to copy over a
+     * since next_prime operates in place
+     */
+    if (MP_OKAY != (mp_result = mp_copy(a,b))) {
+            rb_raise(eLT_M_Error, "Failure to find next prime: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    if (MP_OKAY != (mp_result = mp_prime_next_prime(b,trials,congruency))) {
+            rb_raise(eLT_M_Error, "Failure to find next prime: %s", 
+                mp_error_to_string(mp_result));
+    }
+
+    return result;
+}
+
+
+
 /**********************************************************************
  *                   Ruby Object life-cycle methods                   *
  **********************************************************************/
@@ -1564,6 +1735,7 @@ void Init_libtommath()
     rb_define_module_function(mLT_M,"pow2",ltm_two_to_the,1);
     rb_define_module_function(mLT_M,"two_to_the",ltm_two_to_the,1);
     rb_define_module_function(mLT_M,"rand_of_size",ltm_rand_of_size,1);
+    rb_define_module_function(mLT_M,"num_miller_rabin_trials",ltm_num_miller_rabin_trials,1);
 
     /* exception definition */
     eLT_M_Error = rb_define_class_under(mLT_M,"LTMathError",rb_eStandardError);
@@ -1653,16 +1825,14 @@ void Init_libtommath()
 
     /* Prime number methods */
     rb_define_method(cLT_M_Bignum,"passes_fermat_primality?",ltm_bignum_passes_fermat_primality,1);
+    rb_define_method(cLT_M_Bignum,"passes_miller_rabin?",ltm_bignum_passes_miller_rabin,1);
     rb_define_method(cLT_M_Bignum,"divisible_by_some_primes?",ltm_bignum_divisible_by_some_primes,0);
-    /* prime is divisible
-     * miller-rabin test
-     * is_prime?
-     * next_prime
+    rb_define_method(cLT_M_Bignum,"is_prime?",ltm_bignum_is_prime,-1);
+    rb_define_method(cLT_M_Bignum,"next_prime",ltm_bignum_next_prime,-1);
+
+    /*
      * random_prime
      * generate_prime (mp_prime_random_ex)
      */
 
-    /*
-     * extended euclidian
-     */
 }

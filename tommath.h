@@ -60,36 +60,6 @@ int mp_reduce_2k_setup_l(mp_int *a, mp_int *d);
 /* reduces a modulo b where b is of the form 2**p - k [0 <= a] */
 int mp_reduce_2k_l(mp_int *a, mp_int *n, mp_int *d);
 
-/* performs one Fermat test of "a" using base "b".
- * Sets result to 0 if composite or 1 if probable prime
- */
-int mp_prime_fermat(mp_int *a, mp_int *b, int *result);
-
-/* performs one Miller-Rabin test of "a" using base "b".
- * Sets result to 0 if composite or 1 if probable prime
- */
-int mp_prime_miller_rabin(mp_int *a, mp_int *b, int *result);
-
-/* This gives [for a given bit size] the number of trials required
- * such that Miller-Rabin gives a prob of failure lower than 2^-96 
- */
-int mp_prime_rabin_miller_trials(int size);
-
-/* performs t rounds of Miller-Rabin on "a" using the first
- * t prime bases.  Also performs an initial sieve of trial
- * division.  Determines if "a" is prime with probability
- * of error no more than (1/4)**t.
- *
- * Sets result to 1 if probably prime, 0 otherwise
- */
-int mp_prime_is_prime(mp_int *a, int t, int *result);
-
-/* finds the next prime after the number "a" using "t" trials
- * of Miller-Rabin.
- *
- * bbs_style = 1 means the prime must be congruent to 3 mod 4
- */
-int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
 
 /* makes a truly random prime of a given size (bytes),
  * call with bbs = 1 if you want it to be congruent to 3 mod 4 

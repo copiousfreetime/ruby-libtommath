@@ -555,6 +555,11 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         a.should_not be_passes_fermat_primality(4)
     end
 
+    it "should trick the fermat primality test with a Carmichael number and get true" do
+        a = LibTom::Math::Bignum.new(561)
+        a.should be_passes_fermat_primality(11)
+    end
+
     it "should check if a number is prime by dividing it by some primes and get true" do
         a = LibTom::Math::Bignum.new(1619**2)
         a.should be_divisible_by_some_primes
@@ -564,5 +569,60 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         a = LibTom::Math::Bignum.new(104729)
         a.should_not be_divisible_by_some_primes
     end
+
+    it "should administer a Miller-Rabin test and get true" do
+        a = LibTom::Math::Bignum.new(104729)
+        a.should be_passes_miller_rabin(1729)
+    end
+    
+    it "should administer a Miller-Rabin test and get false" do
+        a = LibTom::Math::Bignum.new(2989441)
+        a.should_not be_passes_miller_rabin(13)
+    end
+
+    it "should administer a Miller-Rabin on a Carmichale number and get false" do
+        a = LibTom::Math::Bignum.new(1729)
+        a.should be_passes_miller_rabin(13)
+    end
+
+    it "should say how many Miller-Rabin tests to run on a number" do
+        ap = LibTom::Math::Bignum.new(2**256-1)
+        ap.num_miller_rabin_trials.should == 16
+    end
+
+    it "should detect if a number is prime within a miniscule probability" do
+        a = 2**256 - 1
+        ap = LibTom::Math::Bignum.new(a)
+        ap.should_not be_is_prime
+    end
+    
+    it "should throw an error if trials > 256" do
+        a = 2**256 - 1
+        ap = LibTom::Math::Bignum.new(a)
+        lambda{ ap.is_prime?(257) }.should raise_error(ArgumentError)
+    end
+
+    it "should throw an error if trials > 256 on next_prime" do
+        a = LibTom::Math::Bignum.new(104729)
+        lambda{ a.next_prime({ :trials => -1 }) }.should raise_error(ArgumentError)
+    end
+    
+    it "should find the 1,000,001th prime" do
+        a = LibTom::Math::Bignum.new(15485863)
+        a.next_prime.should == 15485867
+    end
+
+    it "should find the first 1,000 primes" do
+        require 'mathn'
+        a = LibTom::Math::Bignum.new(1) 
+        p = Prime.new
+        p_list = []
+        a_list = []
+        1_000.times do 
+            a_list << b = b.next_prime
+            p_list << p.succ
+        end
+        a_list.should == p_list
+    end 
 
 end
