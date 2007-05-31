@@ -606,7 +606,7 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         a = LibTom::Math::Bignum.new(104729)
         lambda{ a.next_prime({ :trials => -1 }) }.should raise_error(ArgumentError)
     end
-    
+   
     it "should find the 1,000,001th prime" do
         a = LibTom::Math::Bignum.new(15485863)
         a.next_prime.should == 15485867
@@ -624,5 +624,25 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         end
         a_list.should == p_list
     end 
+
+    it "should raise an exception if the number of bits is not given when generating a random prime" do
+        lambda { LibTom::Math::random_prime }.should raise_error(ArgumentError)
+    end
+
+    it "should generate a random prime of a minimum bitsize" do
+        rp = LibTom::Math::random_prime(256)
+        rp.num_bits.should >= 256 
+        rp.should be_is_prime
+    end
+
+    it "should generate primes according to parameters" do
+        options = { :congruency => true,
+                    :msb => true,
+                    :safe => true }
+        rp = LibTom::Math::random_prime(256, options)
+        puts rp
+        (rp % 4).should == 3 
+        ((rp - 1)/2).should be_is_prime
+    end
 
 end

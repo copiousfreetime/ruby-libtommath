@@ -17,13 +17,7 @@ static VALUE mLT_M;
 static VALUE cLT_M_Bignum;
 static VALUE eLT_M_Error;
 
-/* Ruby Object life-cycle methods */
-static void ltm_bignum_free(mp_int *bn);
-static VALUE ltm_bignum_alloc(VALUE klass);
-static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self);
-
-/* Class instance methods */
-static VALUE ltm_bignum_coerce(VALUE self, VALUE other);
+static VALUE ltm_bignum_alloc(VALUE);
 
 /**********************************************************************
  *                           Useful MACROS                            *
@@ -41,11 +35,11 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other);
  *                     Internally used functions                      *
  **********************************************************************/
 
-#if 1
+#if 0
 /*
  *   This is only used in debugging
  */
-char * mp_int_to_s(mp_int *a)
+static char * mp_int_to_s(mp_int *a)
 {   
     int mp_size,mp_result;
     char *mp_str;
@@ -67,7 +61,7 @@ char * mp_int_to_s(mp_int *a)
  * extract mp_int from any number, includes conversion to a temporary
  * Bignum if necessary.
  */
-mp_int* num_to_mp_int(VALUE i)
+static mp_int* num_to_mp_int(VALUE i)
 {
     mp_int* result;
 
@@ -144,12 +138,33 @@ static mp_int* value_to_mp_int(VALUE obj)
     return bn;
 }
 
+/*
+ * random_prime callback.  Uses the ruby rand method to fill a buffer of
+ * length N with bytes and return the buffer
+ */
+int ltm_bignum_random_prime_callback(unsigned char *buf, int len, void *dat)
+{
+    int i ; 
+    VALUE max = INT2NUM(256);
+    VALUE num;
+
+    for (i = 0 ; i < len ; i++) {
+        num = rb_funcall(rb_mKernel,rb_intern("rand"),1,max);
+        buf[i] = 0xff & (NUM2INT(num));
+    }
+
+    return i;
+}
+
 /**********************************************************************
- *                       Class Instance methods                       *
+ *                       Class Instance Methods                       *
  **********************************************************************/
 
-/*
- * Numeric coercion protocol.
+/* call-seq:
+ *  bignum.coerce(other) -> [bignum, bignum]
+ *
+ * Numeric coercion protocol.  Required to allow any 2 *Numeric* objects
+ * to have arithmetic operations.
  */
 static VALUE ltm_bignum_coerce(VALUE self, VALUE other)
 {
@@ -183,9 +198,9 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other)
 
 /*
  * call-seq:
- *  -Bignum
+ *  -bignum -> bignum
  *
- * returns a copy of the current Bignum with its sign inverted
+ * Unary minus. Returns a Bignum of the opposite sign.
  */
 static VALUE ltm_bignum_uminus(VALUE self)
 {
@@ -204,9 +219,9 @@ static VALUE ltm_bignum_uminus(VALUE self)
 
 /*
  * call-seq:
- *  Bignum.abs
+ *  bignum.abs -> bignum
  *
- * returns the absolute value of bignum
+ * Calculates the absolute value of _bignum_.
  */
 static VALUE ltm_bignum_abs(VALUE self)
 {
@@ -225,9 +240,9 @@ static VALUE ltm_bignum_abs(VALUE self)
 
 /*
  * call-seq:
- *   bignum + bignum
+ *   bignum + numeric -> bignum
  *
- * returns the sum of two bignums
+ * Calculates the arithmetic sum of _bignum_ and _numeric_, returning a Bignum.
  */
 static VALUE ltm_bignum_add(VALUE self, VALUE other)
 {
@@ -248,9 +263,9 @@ static VALUE ltm_bignum_add(VALUE self, VALUE other)
 
 /*
  * call-seq:
- *   bignum - bignum
+ *   bignum - Numeric -> bignum
  *
- * returns the difference of two bignums
+ * Calculates the arithmetic difference between a Bignum and a *Numeric*, returning a Bignum.
  */
 static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
 {
@@ -1506,7 +1521,6 @@ static VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
     int trials_option = 0;
     int congruency = 0;
     int mp_result;
-    VALUE key;
     VALUE value;
 
     /* parse the options */
@@ -1514,17 +1528,13 @@ static VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
         options = argv[0] ;
         /* check for the :trials and :congruency options */
         if (rb_obj_is_kind_of(options,rb_cHash)) {
-            key = rb_str_new2("trials");
-            key = rb_funcall(key,rb_intern("to_sym"),0);
-            value = rb_hash_aref(options,key);
+            value = rb_hash_aref(options,ID2SYM(rb_intern("trials")));
             if (Qnil != value) {
                 trials = NUM2INT(value);
                 trials_option = 1;
             }
 
-            key = rb_str_new2("congruency");
-            key = rb_funcall(key,rb_intern("to_sym"),0);
-            value = rb_hash_aref(options,key);
+            value = rb_hash_aref(options,ID2SYM(rb_intern("congruency")));
             if (Qnil != value) {
                 congruency = (Qtrue == value) ? 1 : 0;
             }
@@ -1564,6 +1574,83 @@ static VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
     return result;
 }
 
+
+/*
+ * call-seq:
+ *  LibTome::Math.random_prime(N) -> Bignum
+ * 
+ * Generates a random prime number greater of at least N bits in length.
+ * Additional parameters may be passed as a hash.
+ *  :trials -> number of Miller-Rabin trials to pass
+ *  :congruency -> the number must be congruent to 3 mod 4
+ *  :safe       -> the number p will also have (p - 1)/2 is p.  Implies :congruency => true.
+ *  :msb        -> set to true to force the 2nd highest bit a one.
+ */
+static VALUE ltm_random_prime(int argc, VALUE* argv, VALUE self)
+{
+    VALUE result = ALLOC_LTM_BIGNUM;
+    mp_int *a    = MP_INT(result);
+
+    int num_bits;
+    VALUE options;
+    VALUE value;
+    int trials = 0;
+    int trials_option = 0;
+    int flags = 0;
+    int mp_result;
+
+    if (argc <= 0) {
+        rb_raise(rb_eArgError,"A number of bits for the random prime is required.");
+    } else {
+        num_bits = NUM2INT(argv[0]);
+        if (argc > 1) {
+            options = argv[1] ;
+
+            /* check for the :trials, :congruency, :safe and :msb  options */
+            if (rb_obj_is_kind_of(options,rb_cHash)) {
+                /* :trials */
+                value = rb_hash_aref(options,ID2SYM(rb_intern("trials")));
+                if (Qnil != value) {
+                    trials = NUM2INT(value);
+                    trials_option = 1;
+                }
+
+                /* :congruency */
+                value = rb_hash_aref(options,ID2SYM(rb_intern("congruency")));
+                if ((Qnil != value) && (Qtrue == value)) {
+                    flags = flags | LTM_PRIME_BBS;
+                }
+
+                /* :safe */
+                value = rb_hash_aref(options,ID2SYM(rb_intern("safe")));
+                if ((Qnil != value) && (Qtrue == value)) {
+                    flags = flags | LTM_PRIME_BBS;
+                    flags = flags | LTM_PRIME_SAFE;
+                }
+
+                /* :msb */
+                value = rb_hash_aref(options,ID2SYM(rb_intern("msb")));
+                if ((Qnil != value) && (Qtrue == value)) {
+                    flags |= LTM_PRIME_2MSB_ON;
+                }
+            } /* options hash */
+        } /* argc */
+    } /* else */
+
+    /* calculate a reasonable default for trials */
+    if (!trials_option && (trials <= 0)) {
+        trials = mp_prime_rabin_miller_trials(num_bits);
+    }
+
+    if (MP_OKAY != (mp_result = mp_prime_random_ex(a,trials,num_bits,flags,
+                                                   ltm_bignum_random_prime_callback,NULL))) {
+            rb_raise(eLT_M_Error, "Failure to find a %d bit random prime: %s", 
+                num_bits,mp_error_to_string(mp_result));
+    }
+
+    return result;
+
+}
 
 
 /**********************************************************************
@@ -1736,6 +1823,7 @@ void Init_libtommath()
     rb_define_module_function(mLT_M,"two_to_the",ltm_two_to_the,1);
     rb_define_module_function(mLT_M,"rand_of_size",ltm_rand_of_size,1);
     rb_define_module_function(mLT_M,"num_miller_rabin_trials",ltm_num_miller_rabin_trials,1);
+    rb_define_module_function(mLT_M,"random_prime",ltm_random_prime,-1);
 
     /* exception definition */
     eLT_M_Error = rb_define_class_under(mLT_M,"LTMathError",rb_eStandardError);
@@ -1829,10 +1917,5 @@ void Init_libtommath()
     rb_define_method(cLT_M_Bignum,"divisible_by_some_primes?",ltm_bignum_divisible_by_some_primes,0);
     rb_define_method(cLT_M_Bignum,"is_prime?",ltm_bignum_is_prime,-1);
     rb_define_method(cLT_M_Bignum,"next_prime",ltm_bignum_next_prime,-1);
-
-    /*
-     * random_prime
-     * generate_prime (mp_prime_random_ex)
-     */
 
 }
