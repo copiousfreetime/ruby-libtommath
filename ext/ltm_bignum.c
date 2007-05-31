@@ -1,6 +1,5 @@
 #include "ruby.h"
 #include <tommath.h> 
-#include "ltm.h"
 #include <math.h>
 
 /**********************************************************************
@@ -1937,7 +1936,7 @@ static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
  * free open source portable number theoretic multiple-precision integer
  * library
  */
-void Init_Bignum()
+void Init_libtommath()
 {
     /* module definitions */
     mLT = rb_define_module("LibTom");

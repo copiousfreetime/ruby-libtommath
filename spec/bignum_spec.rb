@@ -640,7 +640,6 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
                     :msb => true,
                     :safe => true }
         rp = LibTom::Math::random_prime(256, options)
-        puts rp
         (rp % 4).should == 3 
         ((rp - 1)/2).should be_is_prime
     end
