@@ -100,7 +100,7 @@ end
 describe LibTom::Math::Bignum, "object / class comparisons" do
     before(:each) do
         @big = LibTom::Math::Bignum.new(1234567890987654321)
-        @small = 42
+        @small = LibTom::Math::Bignum.new(42)
     end
 
     it "should eql? self" do
@@ -143,7 +143,7 @@ describe LibTom::Math::Bignum, "object / class comparisons" do
         @small.should_not.eql?(42.0)
     end
 
-    it "should not == 42.42" do
+    it "should not == Float(42.42)" do
         @small.should_not == 42.42
     end
 
@@ -562,12 +562,12 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
 
     it "should check if a number is prime by dividing it by some primes and get true" do
         a = LibTom::Math::Bignum.new(1619**2)
-        a.should be_divisible_by_some_primes
+        a.should be_is_divisible_by_some_primes
     end
     
     it "should check if a number is prime by dividing it by some primes and get false" do
         a = LibTom::Math::Bignum.new(104729)
-        a.should_not be_divisible_by_some_primes
+        a.should_not be_is_divisible_by_some_primes
     end
 
     it "should administer a Miller-Rabin test and get true" do
