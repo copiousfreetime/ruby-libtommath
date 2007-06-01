@@ -291,6 +291,6 @@ void Init_math()
 
     /*
      * class LibTom::Math::Prime
+     * cLT_M_Prime = rb_define_class_under(mLT_M,"Prime",rb_cObject);
      */
-    cLT_M_Prime = rb_define_class_under(mLT_M,"Prime",rb_cNumeric);
 }
