@@ -1,4 +1,4 @@
-require 'libtommath'
+require 'libtom/ext/math'
 module LibTom
     module Math
         class Bignum
