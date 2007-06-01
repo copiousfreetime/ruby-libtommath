@@ -26,7 +26,7 @@ end
 rspec = Spec::Rake::SpecTask.new do |r|
     r.warning   = true
     r.libs      << "./lib"
-    r.libs      << "./ext/"
+    r.libs      << "./ext"
     r.rcov      = false
     r.spec_opts  = %w(-f s)
 end

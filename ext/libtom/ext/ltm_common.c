@@ -141,8 +141,8 @@ int ltm_bignum_random_prime_callback(unsigned char *buf, int len, void *dat)
  **********************************************************************/
 
 /*
- *  * garbage collector free method for mp_int structures
- *   */
+ * garbage collector free method for mp_int structures
+ */ 
 static void ltm_bignum_free(mp_int *bn) 
 {
         mp_clear(bn);

@@ -17,7 +17,7 @@ VALUE ltm_bignum_alloc(VALUE);
  * Numeric coercion protocol.  Required to allow any 2 *Numeric* objects
  * to have arithmetic operations.
  */
-static VALUE ltm_bignum_coerce(VALUE self, VALUE other)
+VALUE ltm_bignum_coerce(VALUE self, VALUE other)
 {
     VALUE result = rb_ary_new2(2);
     VALUE param;
@@ -53,7 +53,7 @@ static VALUE ltm_bignum_coerce(VALUE self, VALUE other)
  *
  * Unary minus. Returns a Bignum of the opposite sign.
  */
-static VALUE ltm_bignum_uminus(VALUE self)
+VALUE ltm_bignum_uminus(VALUE self)
 {
     mp_int *a     = MP_INT(self);
     VALUE b_value = rb_funcall(self,rb_intern("dup"),0);
@@ -74,7 +74,7 @@ static VALUE ltm_bignum_uminus(VALUE self)
  *
  * Calculates the absolute value of _bignum_.
  */
-static VALUE ltm_bignum_abs(VALUE self)
+VALUE ltm_bignum_abs(VALUE self)
 {
     mp_int *a     = MP_INT(self);
     VALUE b_value = rb_funcall(self,rb_intern("dup"),0);
@@ -96,7 +96,7 @@ static VALUE ltm_bignum_abs(VALUE self)
  *
  * Calculates the arithmetic sum of _bignum_ and _numeric_, returning a Bignum.
  */
-static VALUE ltm_bignum_add(VALUE self, VALUE other)
+VALUE ltm_bignum_add(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(other);
@@ -120,7 +120,7 @@ static VALUE ltm_bignum_add(VALUE self, VALUE other)
  *
  * Calculates the arithmetic difference between _bignum_ and _numeric_, returning a Bignum.
  */
-static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
+VALUE ltm_bignum_subtract(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(other);
@@ -151,7 +151,7 @@ static VALUE ltm_bignum_subtract(VALUE self, VALUE other)
  *  Bignum.new(1234567890987654321) == "1234567890987654321"    # => false
  *
  */
-static VALUE ltm_bignum_eq(VALUE self, VALUE other)
+VALUE ltm_bignum_eq(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
     mp_int *b ;
@@ -188,7 +188,7 @@ static VALUE ltm_bignum_eq(VALUE self, VALUE other)
  *  Bignum.new(1234567890987654321) == 1234567890987654321.0 # => false
  *
  */
-static VALUE ltm_bignum_eql(VALUE self, VALUE other)
+VALUE ltm_bignum_eql(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
     mp_int *b;
@@ -210,7 +210,7 @@ static VALUE ltm_bignum_eql(VALUE self, VALUE other)
  * Convert _bignum_ to a string representation in base _radix_. Radix can be a
  * value in the range 2..64.
  */
-static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
+VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
 {
     mp_int *a      = MP_INT(self);
     int radix      = 10;
@@ -251,7 +251,7 @@ static VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self)
  *
  * Multiplies _bignum_ by _numeric_ and returns the resulting Bignum.
  */
-static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
+VALUE ltm_bignum_multiply(VALUE self, VALUE other)
 {
     VALUE result = ALLOC_LTM_BIGNUM;
     mp_int *c    = MP_INT(result);
@@ -302,7 +302,7 @@ static VALUE ltm_bignum_multiply(VALUE self, VALUE other)
  *
  * Divides _bignum_ by _numeric_ and returns the resulting Bignum.
  */
-static VALUE ltm_bignum_divide(VALUE self, VALUE other)
+VALUE ltm_bignum_divide(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -343,7 +343,7 @@ static VALUE ltm_bignum_divide(VALUE self, VALUE other)
  *
  * Divides _bignum_ by _numeric_ and returns the remainder as a Bignum.
  */
-static VALUE ltm_bignum_remainder(VALUE self, VALUE other)
+VALUE ltm_bignum_remainder(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(other);
@@ -371,7 +371,7 @@ static VALUE ltm_bignum_remainder(VALUE self, VALUE other)
  *
  * Takes _bignum_ modulo _numeric_ and returns the result as a Bignum.
  */
-static VALUE ltm_bignum_modulo(VALUE self, VALUE other)
+VALUE ltm_bignum_modulo(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(other);
@@ -397,7 +397,7 @@ static VALUE ltm_bignum_modulo(VALUE self, VALUE other)
  * Divides _bignum_ by _numeric_ and returns an array containing the
  * +quotient+ and the +modulus+.
  */
-static VALUE ltm_bignum_divmod(VALUE self, VALUE other)
+VALUE ltm_bignum_divmod(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
     mp_int *b = NUM2MP_INT(other);
@@ -441,7 +441,7 @@ static VALUE ltm_bignum_divmod(VALUE self, VALUE other)
  * boundary multiple and includes a byte to contain the sign.
  */
 
-static VALUE ltm_bignum_size(VALUE self)
+VALUE ltm_bignum_size(VALUE self)
 {
     mp_int *a = MP_INT(self);
     int size = mp_signed_bin_size(a);
@@ -456,7 +456,7 @@ static VALUE ltm_bignum_size(VALUE self)
  * Returns the floating point value of _bignum_.  If the result would be
  * larger than <b>Float::MAX</b>, *Infinity* is returned.
  */
-static VALUE ltm_bignum_to_f(VALUE self)
+VALUE ltm_bignum_to_f(VALUE self)
 {
     mp_int *a   = MP_INT(self);
     double f    = HUGE_VAL; /* assume that self is > Float::MAX */
@@ -500,7 +500,7 @@ static VALUE ltm_bignum_to_f(VALUE self)
  * _bignum_ is <tt>less than</tt>, <tt>equal to</tt>, or <tt>greater
  * than</tt> _numeric_.  This is the basis for the *Comparable* module.
  */
-static VALUE ltm_bignum_spaceship(VALUE self, VALUE other)
+VALUE ltm_bignum_spaceship(VALUE self, VALUE other)
 {
     mp_int *a = MP_INT(self);
     mp_int *b = NUM2MP_INT(other);
@@ -531,7 +531,7 @@ static VALUE ltm_bignum_spaceship(VALUE self, VALUE other)
  * nonzero? retrusn the opposite of zero?
  *
  */
-static VALUE ltm_bignum_nonzero(VALUE self)
+VALUE ltm_bignum_nonzero(VALUE self)
 {
     mp_int *a = MP_INT(self);
 
@@ -545,7 +545,7 @@ static VALUE ltm_bignum_nonzero(VALUE self)
  * Returns true if _bignum_ is zero, otherwise returns false.  zero?
  * returns the opposite of nonzero? 
  */
-static VALUE ltm_bignum_zero(VALUE self)
+VALUE ltm_bignum_zero(VALUE self)
 {
     mp_int *a = MP_INT(self);
 
@@ -559,7 +559,7 @@ static VALUE ltm_bignum_zero(VALUE self)
  * Destroys _bignum_ forcing it to the value +zero+.  After this call,
  * zero? will return true.
  */
-static VALUE ltm_bignum_zero_bang(VALUE self)
+VALUE ltm_bignum_zero_bang(VALUE self)
 {
     mp_int *a = MP_INT(self);
     
@@ -575,7 +575,7 @@ static VALUE ltm_bignum_zero_bang(VALUE self)
  *
  * Returns true if _bignum_ is an even number, otherwise false.
  */
-static VALUE ltm_bignum_even(VALUE self)
+VALUE ltm_bignum_even(VALUE self)
 {
     mp_int *a = MP_INT(self);
 
@@ -589,7 +589,7 @@ static VALUE ltm_bignum_even(VALUE self)
  *
  * Returns true if _bignum_ is an odd number, otherwise false.
  */
-static VALUE ltm_bignum_odd(VALUE self)
+VALUE ltm_bignum_odd(VALUE self)
 {
     mp_int *a = MP_INT(self);
 
@@ -604,7 +604,7 @@ static VALUE ltm_bignum_odd(VALUE self)
  * Calculates a hash of _bignum_ and returns it.  This is normally
  * only used internally for Ruby.
  */
-static VALUE ltm_bignum_hash(VALUE self)
+VALUE ltm_bignum_hash(VALUE self)
 {
     mp_int *a = MP_INT(self);
     long key = 0L;
@@ -626,7 +626,7 @@ static VALUE ltm_bignum_hash(VALUE self)
  * Raise _bignum_ to the _numeric_ power and return the resulting
  * Bignum.
  */
-static VALUE ltm_bignum_pow(VALUE self, VALUE other)
+VALUE ltm_bignum_pow(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -652,7 +652,7 @@ static VALUE ltm_bignum_pow(VALUE self, VALUE other)
  * Bignum.  _numeric_ is converted to a Bignum in the process.
  * 
  */
-static VALUE ltm_bignum_bit_and(VALUE self, VALUE other)
+VALUE ltm_bignum_bit_and(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(other);
@@ -676,7 +676,7 @@ static VALUE ltm_bignum_bit_and(VALUE self, VALUE other)
  * Bitwise *or* _bignum_ with _numeric_ and return the resulting
  * Bignum.  _numeric_ is converted to a Bignum in the process.
  */
-static VALUE ltm_bignum_bit_or(VALUE self, VALUE other)
+VALUE ltm_bignum_bit_or(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(other);
@@ -699,7 +699,7 @@ static VALUE ltm_bignum_bit_or(VALUE self, VALUE other)
  * Bitwise *xor* _bignum_ with _numeric_ and return the resulting
  * Bignum.  _numeric_ is converted to a Bignum in the process.
  */
-static VALUE ltm_bignum_bit_xor(VALUE self, VALUE other)
+VALUE ltm_bignum_bit_xor(VALUE self, VALUE other)
 {
 
     mp_int *a    = MP_INT(self);
@@ -723,7 +723,7 @@ static VALUE ltm_bignum_bit_xor(VALUE self, VALUE other)
  *
  * Left shift _bignum_ by _N_ bits and return the resulting Bignum.
  */
-static VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
+VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -756,7 +756,7 @@ static VALUE ltm_bignum_lshift_bits(VALUE self, VALUE other)
  *
  * Right shift _bignum_ by _N_ bits and return the resulting Bignum.
  */
-static VALUE ltm_bignum_rshift_bits(VALUE self, VALUE other)
+VALUE ltm_bignum_rshift_bits(VALUE self, VALUE other)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -786,7 +786,7 @@ static VALUE ltm_bignum_rshift_bits(VALUE self, VALUE other)
  *
  *  Bitwise negation is not implemented.
  */
-static VALUE ltm_bignum_bit_negation(VALUE self)
+VALUE ltm_bignum_bit_negation(VALUE self)
 {
     rb_raise(rb_eNotImpError,"Bitwise negation is not implemented on LibTom::Math::Bignum");
     return self;
@@ -798,7 +798,7 @@ static VALUE ltm_bignum_bit_negation(VALUE self)
  *
  * Using _bignum_ as a bit vector is not implemented.
  */
-static VALUE ltm_bignum_bit_ref(VALUE self)
+VALUE ltm_bignum_bit_ref(VALUE self)
 {
     rb_raise(rb_eNotImpError,"Bit Reference access is not implemented on LibTom::Math::Bignum");
     return self;
@@ -811,7 +811,7 @@ static VALUE ltm_bignum_bit_ref(VALUE self)
  *
  * Return the number of bits used to represent _bignum_.
  */
-static VALUE ltm_bignum_num_bits(VALUE self)
+VALUE ltm_bignum_num_bits(VALUE self)
 {
     mp_int *a = MP_INT(self);
     return INT2FIX(mp_count_bits(a));
@@ -825,7 +825,7 @@ static VALUE ltm_bignum_num_bits(VALUE self)
  *
  * Divide _bignum_ by the polynomial <tt>x**n</tt>.
  */
-static VALUE ltm_bignum_right_shift_digits(VALUE self, VALUE other)
+VALUE ltm_bignum_right_shift_digits(VALUE self, VALUE other)
 {
     mp_int *a       = MP_INT(self);
     VALUE result    = ALLOC_LTM_BIGNUM;
@@ -854,7 +854,7 @@ static VALUE ltm_bignum_right_shift_digits(VALUE self, VALUE other)
  *
  * Multiply _bignum_ by the polynomial <tt>x**n</tt>.
  */
-static VALUE ltm_bignum_left_shift_digits(VALUE self, VALUE other)
+VALUE ltm_bignum_left_shift_digits(VALUE self, VALUE other)
 {
     mp_int *a       = MP_INT(self);
     VALUE result    = ALLOC_LTM_BIGNUM;
@@ -884,7 +884,7 @@ static VALUE ltm_bignum_left_shift_digits(VALUE self, VALUE other)
  *
  * Calculates the square of _bignum_ and returns that result as a Bignum.
  */
-static VALUE ltm_bignum_squared(VALUE self)
+VALUE ltm_bignum_squared(VALUE self)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -908,7 +908,7 @@ static VALUE ltm_bignum_squared(VALUE self)
  *
  * Calculates _bignum_ <tt>mod (2**n)</tt> and returns the result as a Bignum.
  */
-static VALUE ltm_bignum_modulo_2d(VALUE self, VALUE other)
+VALUE ltm_bignum_modulo_2d(VALUE self, VALUE other)
 {
     mp_int *a       = MP_INT(self);
     int power_of_2  = NUM2INT(other); 
@@ -930,7 +930,7 @@ static VALUE ltm_bignum_modulo_2d(VALUE self, VALUE other)
  *
  * Returns (_bignum_ + _numeric1_) mod _numeric2_
  */
-static VALUE ltm_bignum_add_modulus(VALUE self, VALUE p1, VALUE p2)
+VALUE ltm_bignum_add_modulus(VALUE self, VALUE p1, VALUE p2)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -952,7 +952,7 @@ static VALUE ltm_bignum_add_modulus(VALUE self, VALUE p1, VALUE p2)
  *
  * Returns (_bignum_ - _numeric_) mod _numeric_
  */
-static VALUE ltm_bignum_subtract_modulus(VALUE self, VALUE p1, VALUE p2)
+VALUE ltm_bignum_subtract_modulus(VALUE self, VALUE p1, VALUE p2)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -975,7 +975,7 @@ static VALUE ltm_bignum_subtract_modulus(VALUE self, VALUE p1, VALUE p2)
  *
  * Returns (_bignum_ * _numeric1_) mod _numeric2_
  */
-static VALUE ltm_bignum_multiply_modulus(VALUE self, VALUE p1, VALUE p2)
+VALUE ltm_bignum_multiply_modulus(VALUE self, VALUE p1, VALUE p2)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -998,7 +998,7 @@ static VALUE ltm_bignum_multiply_modulus(VALUE self, VALUE p1, VALUE p2)
  *
  * Returns (_bignum_ * _bignum_) mod _numeric_ 
  */
-static VALUE ltm_bignum_square_modulus(VALUE self, VALUE p1)
+VALUE ltm_bignum_square_modulus(VALUE self, VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1022,7 +1022,7 @@ static VALUE ltm_bignum_square_modulus(VALUE self, VALUE p1)
  * _numeric_.
  */
 
-static VALUE ltm_bignum_inverse_modulus(VALUE self, VALUE p1)
+VALUE ltm_bignum_inverse_modulus(VALUE self, VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1044,7 +1044,7 @@ static VALUE ltm_bignum_inverse_modulus(VALUE self, VALUE p1)
  *
  * Returns (_bignum_ ** _numeric1_) mod _numeric2_
  */
-static VALUE ltm_bignum_exponent_modulus(VALUE self, VALUE p1, VALUE p2)
+VALUE ltm_bignum_exponent_modulus(VALUE self, VALUE p1, VALUE p2)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1071,7 +1071,7 @@ static VALUE ltm_bignum_exponent_modulus(VALUE self, VALUE p1, VALUE p2)
  *  u1*bignum + u2*numeric = u3
  *
  */
-static VALUE ltm_bignum_extended_euclidian(VALUE self, VALUE p1)
+VALUE ltm_bignum_extended_euclidian(VALUE self, VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1102,7 +1102,7 @@ static VALUE ltm_bignum_extended_euclidian(VALUE self, VALUE p1)
  *
  * Finds the greatest common divisor between _bignum_ and _numeric_.
  */
-static VALUE ltm_bignum_greatest_common_divisor(VALUE self, VALUE p1)
+VALUE ltm_bignum_greatest_common_divisor(VALUE self, VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1125,7 +1125,7 @@ static VALUE ltm_bignum_greatest_common_divisor(VALUE self, VALUE p1)
  *
  * Finds the least common multiple of _bignum_ and _numeric_.
  */
-static VALUE ltm_bignum_least_common_multiple(VALUE self, VALUE p1)
+VALUE ltm_bignum_least_common_multiple(VALUE self, VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1152,7 +1152,7 @@ static VALUE ltm_bignum_least_common_multiple(VALUE self, VALUE p1)
  * <b><tt>0</tt></b>::          _bignum_ divides _numeric_
  * <b><tt>1</tt></b>::          _bignum_ is a quadratic residue module _numeric_
  */
-static VALUE ltm_bignum_jacobi(VALUE self, VALUE p)
+VALUE ltm_bignum_jacobi(VALUE self, VALUE p)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p);
@@ -1178,7 +1178,7 @@ static VALUE ltm_bignum_jacobi(VALUE self, VALUE p)
  * This method is not efficient for _numeric_ > 3 on numbers 
  * with more than 1000 bits.
  */
-static VALUE ltm_bignum_nth_root(VALUE self, VALUE p1)
+VALUE ltm_bignum_nth_root(VALUE self, VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     int b        = NUM2INT(p1);
@@ -1211,7 +1211,7 @@ static VALUE ltm_bignum_nth_root(VALUE self, VALUE p1)
  * <tt>|r|**2 <= |bignum|</tt>.
  */
 
-static VALUE ltm_bignum_square_root(VALUE self)
+VALUE ltm_bignum_square_root(VALUE self)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -1234,7 +1234,7 @@ static VALUE ltm_bignum_square_root(VALUE self)
  * Determins if _bignum_ is a square, that is, it has an integer root,
  * and returns +true+ or +false+ as appropriate.
  */
-static VALUE ltm_bignum_is_square(VALUE self)
+VALUE ltm_bignum_is_square(VALUE self)
 {
     mp_int *a    = MP_INT(self);
     int is_square;
@@ -1260,7 +1260,7 @@ static VALUE ltm_bignum_is_square(VALUE self)
  * Currently the "list of known prime numbers" is the first 256 primes.
  *
  */
-static VALUE ltm_bignum_divisible_by_some_primes(VALUE self)
+VALUE ltm_bignum_divisible_by_some_primes(VALUE self)
 {
     mp_int *a    = MP_INT(self);
     int is_prime;
@@ -1288,7 +1288,7 @@ static VALUE ltm_bignum_divisible_by_some_primes(VALUE self)
  * is "probably" prime.
  *  
  */
-static VALUE ltm_bignum_passes_fermat_primality(VALUE self,VALUE p1)
+VALUE ltm_bignum_passes_fermat_primality(VALUE self,VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1318,7 +1318,7 @@ static VALUE ltm_bignum_passes_fermat_primality(VALUE self,VALUE p1)
  * The number of iterations of the Miller-Rabin test to perform on
  * _bignum_ may be calculated with num_miller_rabin_trials(_bignum_.num_bits).
  */
-static VALUE ltm_bignum_passes_miller_rabin(VALUE self,VALUE p1)
+VALUE ltm_bignum_passes_miller_rabin(VALUE self,VALUE p1)
 {
     mp_int *a    = MP_INT(self);
     mp_int *b    = NUM2MP_INT(p1);
@@ -1344,7 +1344,7 @@ static VALUE ltm_bignum_passes_miller_rabin(VALUE self,VALUE p1)
  * Miller-Rabin tests.  By default, _trials_ is the value returned from
  * num_miller_rabin_trails(bignum.num_bits).
  */
-static VALUE ltm_bignum_is_prime(int argc, VALUE* argv, VALUE self)
+VALUE ltm_bignum_is_prime(int argc, VALUE* argv, VALUE self)
 {
     mp_int *a    = MP_INT(self);
     int t;       
@@ -1392,7 +1392,7 @@ static VALUE ltm_bignum_is_prime(int argc, VALUE* argv, VALUE self)
  *                                  returned be congruent to 3 mod 4.
  *                                  The default is +false+.
  */
-static VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
+VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
 {
     mp_int *a    = MP_INT(self);
     VALUE result = ALLOC_LTM_BIGNUM;
@@ -1471,7 +1471,7 @@ static VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
  *  Bignum.new(42.42)           # => 42
  *  Bignum.new(42.0)            # => 42
  */
-static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
+VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
 {
     mp_int *bn;
     VALUE arg;
@@ -1563,7 +1563,7 @@ static VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
 /* 
  * Internal method used internally in ruby for +dup+ and +clone+
  */
-static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
+VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
 {
     mp_int *m_orig;
     mp_int *m_copy;
@@ -1584,111 +1584,3 @@ static VALUE ltm_bignum_initialize_copy(VALUE copy, VALUE orig)
     return copy;
 }
 
-/**********************************************************************
- *                   Ruby extension initialization                    *
- **********************************************************************/
-
-/*
- * Interface to the LibTomMath[http://libtom.org/?page=features&newsitems=5&whatfile=ltm]
- * free open source portable number theoretic multiple-precision integer
- * library
- */
-void Init_Bignum()
-{
-    /* class Bignum definition, same as :;Bignum  the builtin class */
-    cLT_M_Bignum = rb_define_class_under(mLT_M,"Bignum",rb_cNumeric);
-    rb_define_alloc_func(cLT_M_Bignum,ltm_bignum_alloc);
-    rb_define_method(cLT_M_Bignum,"initialize",ltm_bignum_initialize,-1);
-    rb_define_method(cLT_M_Bignum,"initialize_copy",ltm_bignum_initialize_copy,1);
-    rb_define_method(cLT_M_Bignum,"to_s",ltm_bignum_to_s, -1); 
-
-    /* comparison operators */
-    rb_define_method(cLT_M_Bignum, "==",ltm_bignum_eq, 1);
-    rb_define_method(cLT_M_Bignum, "eql?",ltm_bignum_eql, 1);
-    rb_define_method(cLT_M_Bignum, "<=>", ltm_bignum_spaceship, 1);
-
-    /* mathematical operators */
-    rb_define_method(cLT_M_Bignum,"coerce", ltm_bignum_coerce, 1);
-    rb_define_method(cLT_M_Bignum, "-@", ltm_bignum_uminus, 0);
-    rb_define_method(cLT_M_Bignum, "abs", ltm_bignum_abs, 0);
-    rb_define_method(cLT_M_Bignum, "+", ltm_bignum_add, 1);
-    rb_define_alias(cLT_M_Bignum, "add", "+");
-    rb_define_method(cLT_M_Bignum, "-", ltm_bignum_subtract, 1);
-    rb_define_alias(cLT_M_Bignum, "subtract", "-");
-    rb_define_method(cLT_M_Bignum, "*", ltm_bignum_multiply, 1);
-    rb_define_alias(cLT_M_Bignum, "multiply", "*");
-    rb_define_method(cLT_M_Bignum, "/", ltm_bignum_divide, 1);
-    rb_define_alias(cLT_M_Bignum, "divide", "/");
-    rb_define_alias(cLT_M_Bignum, "quo", "/");
-    rb_define_alias(cLT_M_Bignum, "div", "/");
-    rb_define_method(cLT_M_Bignum, "remainder",ltm_bignum_remainder, 1);
-    rb_define_method(cLT_M_Bignum, "%", ltm_bignum_modulo, 1);
-    rb_define_alias(cLT_M_Bignum, "mod","%");
-    rb_define_alias(cLT_M_Bignum, "modulo","%");
-    rb_define_method(cLT_M_Bignum, "divmod",ltm_bignum_divmod, 1);
-    rb_define_method(cLT_M_Bignum, "**",ltm_bignum_pow, 1);
- 
-    /* utility methods */
-    rb_define_method(cLT_M_Bignum, "size",ltm_bignum_size, 0);
-    rb_define_method(cLT_M_Bignum, "to_f",ltm_bignum_to_f, 0);
-    rb_define_method(cLT_M_Bignum, "even?",ltm_bignum_even, 0);
-    rb_define_method(cLT_M_Bignum, "odd?",ltm_bignum_odd, 0);
-    rb_define_method(cLT_M_Bignum, "nonzero?",ltm_bignum_nonzero,0);
-    rb_define_method(cLT_M_Bignum, "zero?",ltm_bignum_zero,0);
-    rb_define_method(cLT_M_Bignum, "zero!",ltm_bignum_zero_bang,0);
-    rb_define_method(cLT_M_Bignum, "hash",ltm_bignum_hash, 0);
-    rb_define_method(cLT_M_Bignum, "num_bits",ltm_bignum_num_bits,0);
-
-    /* logical / bitwise  operators */
-    rb_define_method(cLT_M_Bignum, "&",ltm_bignum_bit_and, 1);
-    rb_define_method(cLT_M_Bignum, "|",ltm_bignum_bit_or, 1);
-    rb_define_method(cLT_M_Bignum, "^",ltm_bignum_bit_xor, 1);
-    rb_define_method(cLT_M_Bignum, "<<",ltm_bignum_lshift_bits, 1);
-    rb_define_method(cLT_M_Bignum, ">>",ltm_bignum_rshift_bits, 1);
-
-    /* Bit wise negation and accessing a single bit as a bit vector, not
-     * explicitly supported by libtom math.  They may be able to be
-     * hacked around, but it may not be worth it.  Currently these throw
-     * NotImplementedErrors
-     * 
-     */
-    rb_define_method(cLT_M_Bignum, "~",ltm_bignum_bit_negation, 0);
-    rb_define_method(cLT_M_Bignum, "[]",ltm_bignum_bit_ref, 1);
-
-    /* Additional methods that are provide by libtommath */
-    rb_define_method(cLT_M_Bignum,"right_shift_digits",ltm_bignum_right_shift_digits,1);
-    rb_define_alias(cLT_M_Bignum,"divide_by_x_pow_n","right_shift_digits");
-    rb_define_method(cLT_M_Bignum,"left_shift_digits",ltm_bignum_left_shift_digits,1);
-    rb_define_alias(cLT_M_Bignum,"multiply_by_x_pow_n","left_shift_digits");
-
-    rb_define_method(cLT_M_Bignum,"squared",ltm_bignum_squared,0);
-    rb_define_method(cLT_M_Bignum,"mod_2n",ltm_bignum_modulo_2d,1);
-    rb_define_alias(cLT_M_Bignum,"mod_pow2","mod_2n");
-    rb_define_alias(cLT_M_Bignum,"modulo_2n","mod_2n");
-    rb_define_alias(cLT_M_Bignum,"modulo_pow2","mod_2n");
-
-    rb_define_method(cLT_M_Bignum,"add_modulus",ltm_bignum_add_modulus,2);
-    rb_define_method(cLT_M_Bignum,"subtract_modulus",ltm_bignum_subtract_modulus,2);
-    rb_define_method(cLT_M_Bignum,"multiply_modulus",ltm_bignum_multiply_modulus,2);
-    rb_define_method(cLT_M_Bignum,"square_modulus",ltm_bignum_square_modulus,1);
-    rb_define_method(cLT_M_Bignum,"exponent_modulus",ltm_bignum_exponent_modulus,2);
-    rb_define_method(cLT_M_Bignum,"inverse_modulus",ltm_bignum_inverse_modulus,1);
-    rb_define_method(cLT_M_Bignum,"greatest_common_divisor",ltm_bignum_greatest_common_divisor,1);
-    rb_define_alias(cLT_M_Bignum,"gcd","greatest_common_divisor");
-    rb_define_method(cLT_M_Bignum,"extended_euclidian",ltm_bignum_extended_euclidian,1);
-    rb_define_method(cLT_M_Bignum,"least_common_multiple",ltm_bignum_least_common_multiple,1);
-    rb_define_alias(cLT_M_Bignum,"lcm","least_common_multiple");
-    rb_define_method(cLT_M_Bignum,"nth_root",ltm_bignum_nth_root,1);
-    rb_define_method(cLT_M_Bignum,"square_root",ltm_bignum_square_root,0);
-    rb_define_method(cLT_M_Bignum,"is_square?",ltm_bignum_is_square,0);
-    rb_define_method(cLT_M_Bignum,"jacobi",ltm_bignum_jacobi,1);
-
-
-    /* Prime number methods */
-    rb_define_method(cLT_M_Bignum,"passes_fermat_primality?",ltm_bignum_passes_fermat_primality,1);
-    rb_define_method(cLT_M_Bignum,"passes_miller_rabin?",ltm_bignum_passes_miller_rabin,1);
-    rb_define_method(cLT_M_Bignum,"is_divisible_by_some_primes?",ltm_bignum_divisible_by_some_primes,0);
-    rb_define_method(cLT_M_Bignum,"is_prime?",ltm_bignum_is_prime,-1);
-    rb_define_method(cLT_M_Bignum,"next_prime",ltm_bignum_next_prime,-1);
-
-}
