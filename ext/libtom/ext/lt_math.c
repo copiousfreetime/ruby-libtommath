@@ -174,18 +174,27 @@ static VALUE ltm_random_prime(int argc, VALUE* argv, VALUE self)
  */
 void Init_math()
 {
-    /* module definitions */
+
+    /*
+     * module LibTom
+     */
     mLT = rb_define_module("LibTom");
+
+    /*
+     * module Math
+     */
     mLT_M = rb_define_module_under(mLT,"Math");
     
-    /* module methods */
+    /* LibTom::Math:: <methods> */
     rb_define_module_function(mLT_M,"pow2",ltm_two_to_the,1);
     rb_define_module_function(mLT_M,"two_to_the",ltm_two_to_the,1);
     rb_define_module_function(mLT_M,"rand_of_size",ltm_rand_of_size,1);
     rb_define_module_function(mLT_M,"num_miller_rabin_trials",ltm_num_miller_rabin_trials,1);
     rb_define_module_function(mLT_M,"random_prime",ltm_random_prime,-1);
 
-    /* class Bignum definition, same as :;Bignum  the builtin class */
+    /*
+     * class LibTom::Math::Bignum
+     */
     cLT_M_Bignum = rb_define_class_under(mLT_M,"Bignum",rb_cNumeric);
     rb_define_alloc_func(cLT_M_Bignum,ltm_bignum_alloc);
     rb_define_method(cLT_M_Bignum,"initialize",ltm_bignum_initialize,-1);
@@ -280,4 +289,8 @@ void Init_math()
     rb_define_method(cLT_M_Bignum,"is_prime?",ltm_bignum_is_prime,-1);
     rb_define_method(cLT_M_Bignum,"next_prime",ltm_bignum_next_prime,-1);
 
+    /*
+     * class LibTom::Math::Prime
+     */
+    cLT_M_Prime = rb_define_class_under(mLT_M,"Prime",rb_cNumeric);
 }

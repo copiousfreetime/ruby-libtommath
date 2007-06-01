@@ -10,6 +10,7 @@
 extern VALUE mLT; 
 extern VALUE mLT_M;
 extern VALUE cLT_M_Bignum;
+extern VALUE cLT_M_Prime;
 extern VALUE eLT_M_Error;
 
 /**********************************************************************
@@ -22,6 +23,7 @@ extern mp_int* num_to_mp_int(VALUE);
 extern int ltm_bignum_random_prime_callback(unsigned char*, int, void*);
 
 
+/** Bignum **/
 extern VALUE is_2(VALUE);
 extern VALUE ltm_bignum_abs(VALUE self);
 extern VALUE ltm_bignum_add_modulus(VALUE self, VALUE p1, VALUE p2);
@@ -79,6 +81,8 @@ extern VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self);
 extern VALUE ltm_bignum_uminus(VALUE self);
 extern VALUE ltm_bignum_zero_bang(VALUE self);
 extern VALUE ltm_bignum_zero(VALUE self);
+
+/** Prime **/
 
 /**********************************************************************
  *                           Useful MACROS                            *
