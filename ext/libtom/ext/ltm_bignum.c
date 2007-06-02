@@ -1505,6 +1505,7 @@ VALUE ltm_bignum_next_prime(int argc, VALUE* argv, VALUE self)
 VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
 {
     mp_int *bn;
+    mp_int *orig;
     VALUE arg;
     VALUE arg2;
     VALUE arg_tmp;
@@ -1527,70 +1528,80 @@ VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
         break;
     }
 
-    /* first pass, everything is converted to a ::Bignum or an integer
-     * */
-    switch (TYPE(arg)) {
-    case T_FIXNUM:
-    case T_STRING:
-        /* fixnums and strings are okay, they fall through to the 2nd pass */
-        arg2 = arg;
-        break;
-    case T_FLOAT:
-        /* Just call .to_i on the float and then to_s if it was converted
-         * to a ::Bignum
-         */
-        arg_tmp = rb_funcall(arg,rb_intern("to_i"),0);
-        if (TYPE(arg_tmp) == T_BIGNUM) {
-            arg2 = rb_funcall(arg_tmp,rb_intern("to_s"),0);
-        } else {
-            arg2 = arg_tmp;
+    /* If we are not a Bignum then convert */
+    if (!IS_LTM_BIGNUM(arg)) {
+
+        /* first pass, everything is converted to a ::Bignum or an integer */
+        switch (TYPE(arg)) {
+        case T_FIXNUM:
+        case T_STRING:
+            /* fixnums and strings are okay, they fall through to the 2nd pass */
+            arg2 = arg;
+            break;
+        case T_FLOAT:
+            /* Just call .to_i on the float and then to_s if it was converted
+             * to a ::Bignum
+             */
+            arg_tmp = rb_funcall(arg,rb_intern("to_i"),0);
+            if (TYPE(arg_tmp) == T_BIGNUM) {
+                arg2 = rb_funcall(arg_tmp,rb_intern("to_s"),0);
+            } else {
+                arg2 = arg_tmp;
+            }
+            break;
+
+        case T_BIGNUM:
+            /* bignums get converted to strings which we will read in on the
+             * 2nd pass
+             */
+            arg2 = rb_funcall(arg,rb_intern("to_s"),0);
+            break;
+        default:
+            /* If it is a descendant of Numeric try and convert it */
+            if (Qtrue == rb_obj_is_kind_of(arg,rb_cNumeric)) {
+                arg2 = rb_funcall(arg,rb_intern("to_i"),0);
+            } else {
+                rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
+            }
+            break;
+
         }
-        break;
 
-    case T_BIGNUM:
-        /* bignums get converted to strings which we will read in on the
-         * 2nd pass
-         */
-        arg2 = rb_funcall(arg,rb_intern("to_s"),0);
-        break;
-    default:
-        /* If it is a descendant of Numeric try and convert it */
-        if (Qtrue == rb_obj_is_kind_of(arg,rb_cNumeric)) {
-            arg2 = rb_funcall(arg,rb_intern("to_i"),0);
-        } else {
-            rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
+        /* second pass, everything is either a T_STRING or a T_FIXNUM */
+        Data_Get_Struct(self,mp_int,bn);
+        switch (TYPE(arg2)) {
+        case T_FIXNUM:
+            /* if arg2 is Fixnum then we convert to a ulong and then set the sign
+             * as appropriate
+             */
+            signed_val = NUM2LONG(arg2);
+            from_val   = (signed_val < 0) ? (-signed_val) : (signed_val);
+            if (MP_OKAY != (mp_result = mp_init_set_int(bn,(unsigned long)from_val))) {
+                rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
+            }
+            if (signed_val < 0) {
+                mp_neg(bn,bn);
+            }
+            break;
+        case T_STRING:
+            /* if arg is a string then assume that it is a number and
+             * convert it as such
+             */
+            if (MP_OKAY != (mp_result = mp_read_radix(bn,RSTRING(arg2)->ptr,radix))) {
+                rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
+            }
+            break;
+        default:
+            rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg2));
+            break;
         }
-        break;
-
-    }
-
-    /* second pass, everything is either a T_STRING or a T_FIXNUM */
-    Data_Get_Struct(self,mp_int,bn);
-    switch (TYPE(arg2)) {
-    case T_FIXNUM:
-        /* if arg2 is Fixnum then we convert to a ulong and then set the sign
-         * as appropriate
-         */
-        signed_val = NUM2LONG(arg2);
-        from_val   = (signed_val < 0) ? (-signed_val) : (signed_val);
-        if (MP_OKAY != (mp_result = mp_init_set_int(bn,(unsigned long)from_val))) {
+    } else {
+        /* we are initializing from a Bignum so copy */
+        Data_Get_Struct(self,mp_int,bn);
+        orig = MP_INT(arg);
+        if (MP_OKAY != (mp_result = mp_init_copy(bn,orig))) {
             rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
         }
-        if (signed_val < 0) {
-            mp_neg(bn,bn);
-        }
-        break;
-    case T_STRING:
-        /* if arg is a string then assume that it is a number and
-         * convert it as such
-         */
-        if (MP_OKAY != (mp_result = mp_read_radix(bn,RSTRING(arg2)->ptr,radix))) {
-            rb_raise(eLT_M_Error, "%s", mp_error_to_string(mp_result));
-        }
-        break;
-    default:
-        rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg2));
-        break;
     }
     return self;
 }

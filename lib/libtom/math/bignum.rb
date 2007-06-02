@@ -10,7 +10,10 @@ module LibTom
             LibTom::Math::Bignum.new(a) 
         end 
         module_function :Bignum
-        
+       
+        #
+        # Documentation and examples for Bignum should go here
+        #
         class Bignum
             def num_miller_rabin_trials
                 LibTom::Math::num_miller_rabin_trials(self.num_bits) 

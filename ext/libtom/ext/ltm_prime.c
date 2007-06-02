@@ -12,7 +12,7 @@ VALUE cLT_M_Prime;
 
 /*
  * call-seq:
- *  LibTom::Math::Prime.num_miller_rabin_trials_for(n)
+ *  num_miller_rabin_trials_for(n)
  *
  * Calculate the number of Miller-Rabin trials necessary to get a 2**-92
  * or lower probability of failure for a given _n_-bit size Bignum that
@@ -35,7 +35,7 @@ VALUE ltm_prime_num_miller_rabin_trials(VALUE self, VALUE other)
 
 /*
  * call-seq:
- *  LibTome::Math::Prime::random_of_size( n, options = Hash.new ) -> bignum
+ *  random_of_size( n, options = Hash.new ) -> bignum
  * 
  * Generates a random prime of at least _n_ bits in length.  The
  * _options_ can be:

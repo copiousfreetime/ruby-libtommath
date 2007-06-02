@@ -37,6 +37,12 @@ describe LibTom::Math::Prime do
         rp.should be_is_prime
     end
 
+    it "can start with a large prime " do
+        rp = LibTom::Math::Prime::random_of_size(256)
+        p = LibTom::Math::Prime.new(rp)
+        p.succ.should be_is_prime
+    end
+
     it "should generate primes according to parameters" do
         options = { :congruency => true,
                     :msb => true,
