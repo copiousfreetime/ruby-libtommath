@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+top_level = File.expand_path(File.join(File.dirname(__FILE__),".."))
+$: << File.join(top_level,"lib")
+$: << File.join(top_level,"ext")
+
+require 'libtom/math'
+require 'benchmark'
+
+p = 1_000_000
+Benchmark.bm(25) do |x|
+    x.report("Ruby   2**#{p}") { 2**p }
+    x.report("LibTom 2**#{p}") { LibTom::Math::two_to_the(p) }
+end
+
+ltm_big_n1 = LibTom::Math::Bignum::random_of_size(10000)
+ltm_big_n2 = LibTom::Math::Bignum::random_of_size(10000)
+
+rb_big_n1 = ltm_big_n1.to_s.to_i
+rb_big_n2 = ltm_big_n2.to_s.to_i
+
+Benchmark.bm(25) do |x|
+    x.report("Ruby   multiplication") { rb_big_n1 * rb_big_n2 }
+    x.report("LibTom multiplication") { ltm_big_n1 * ltm_big_n2 }
+end
+
+ltm_1 = LibTom::Math::Bignum(9)**25
+ruby_1 = 9**25
+[1000,10_000,100_000].each do |power|
+    Benchmark.bm(25) do |x|
+        x.report("Ruby   (9**25)**(#{power})") { ruby_1**power }
+        x.report("LibTom (9**25)**(#{power})") { ltm_1**power  }
+    end
+end
+
+
+
+

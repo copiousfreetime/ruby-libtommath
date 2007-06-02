@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 
-$: << "../lib"
-$: << "../ext"
+top_level = File.expand_path(File.join(File.dirname(__FILE__),".."))
+$: << File.join(top_level,"lib")
+$: << File.join(top_level,"ext")
 
 require 'libtom/math'
 require 'mathn'

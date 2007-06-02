@@ -1,8 +1,2 @@
-- break apart ltm_bignum into 
-    - lt_math.c
-    - ltm.h
-    - ltm_bignum.c
-    - ltm_prime.c
-
-- refactor directories
 - redo Rakefile
+- README
