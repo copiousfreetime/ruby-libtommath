@@ -8,6 +8,32 @@ VALUE eLT_M_Error;
 VALUE ltm_bignum_alloc(VALUE);
 
 /**********************************************************************
+ *                      Class Singleton Methods                       *
+ **********************************************************************/
+/*
+ * call-seq:
+ *  LibTom::Math::Bignum.random_of_size(n) -> bignum
+ *
+ * Generate a pseudo-random Bignum of at least _n_ bits and return it.
+ */
+VALUE ltm_bignum_random_of_size(VALUE self, VALUE other)
+{
+    VALUE result    = ALLOC_LTM_BIGNUM;
+    mp_int *a       = MP_INT(result);
+    double num_bits = NUM2DBL(other);
+    int num_digits  = (int)ceil(num_bits / MP_DIGIT_BIT);
+    int mp_result;
+
+    if (MP_OKAY != (mp_result = mp_rand(a,num_digits))) {
+        rb_raise(eLT_M_Error, "Failure calculating rand with %d bits: %s\n",
+            num_bits,mp_error_to_string(mp_result));
+    }   
+    return result;
+}
+
+
+
+/**********************************************************************
  *                       Class Instance Methods                       *
  **********************************************************************/
 
@@ -20,6 +46,7 @@ VALUE ltm_bignum_alloc(VALUE);
 VALUE ltm_bignum_coerce(VALUE self, VALUE other)
 {
     VALUE result = rb_ary_new2(2);
+    VALUE tmp;
     VALUE param;
     VALUE receiver;
 
@@ -30,15 +57,19 @@ VALUE ltm_bignum_coerce(VALUE self, VALUE other)
             param = NEW_LTM_BIGNUM_FROM(other);
             receiver = self;
             break;
-            /* FIXME
-        case T_FLOAT:
-            param = other;
-            receiver = ltm_bignum_to_float(MP_INT(self));
-            break
-            */
         default:
-            rb_raise(rb_eTypeError, "can't coerce %s to LTMBignum",
-                    rb_obj_classname(other));
+            /* maybe it is a Rational or something that descends from
+             * Numeric.  If that is the case, try to convert it to a
+             * bignu anyway
+             */
+            if (Qtrue == rb_obj_is_kind_of(other,rb_cNumeric)) {
+                tmp = rb_funcall(other,rb_intern("to_i"),0);
+                param = NEW_LTM_BIGNUM_FROM(tmp);
+                receiver = self;
+            } else {
+                rb_raise(rb_eTypeError, "can't coerce %s to LibTom::Math::Bignum",
+                        rb_obj_classname(other));
+            }
             break; 
     }
 
@@ -1505,7 +1536,7 @@ VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
         arg2 = arg;
         break;
     case T_FLOAT:
-        /* Just call .to_i on the float and then to_s if it was convertd
+        /* Just call .to_i on the float and then to_s if it was converted
          * to a ::Bignum
          */
         arg_tmp = rb_funcall(arg,rb_intern("to_i"),0);
@@ -1523,7 +1554,12 @@ VALUE ltm_bignum_initialize(int argc, VALUE *argv, VALUE self)
         arg2 = rb_funcall(arg,rb_intern("to_s"),0);
         break;
     default:
-        rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
+        /* If it is a descendant of Numeric try and convert it */
+        if (Qtrue == rb_obj_is_kind_of(arg,rb_cNumeric)) {
+            arg2 = rb_funcall(arg,rb_intern("to_i"),0);
+        } else {
+            rb_raise(rb_eArgError, "Unable to create Bignum from %s", StringValuePtr(arg));
+        }
         break;
 
     }

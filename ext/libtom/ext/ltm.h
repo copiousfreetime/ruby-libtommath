@@ -66,6 +66,7 @@ extern VALUE ltm_bignum_odd(VALUE self);
 extern VALUE ltm_bignum_passes_fermat_primality(VALUE self,VALUE p1);
 extern VALUE ltm_bignum_passes_miller_rabin(VALUE self,VALUE p1);
 extern VALUE ltm_bignum_pow(VALUE self, VALUE other);
+extern VALUE ltm_bignum_random_of_size(VALUE self, VALUE other);
 extern VALUE ltm_bignum_remainder(VALUE self, VALUE other);
 extern VALUE ltm_bignum_right_shift_digits(VALUE self, VALUE other);
 extern VALUE ltm_bignum_rshift_bits(VALUE self, VALUE other);
@@ -81,6 +82,8 @@ extern VALUE ltm_bignum_to_s(int argc, VALUE *argv, VALUE self);
 extern VALUE ltm_bignum_uminus(VALUE self);
 extern VALUE ltm_bignum_zero_bang(VALUE self);
 extern VALUE ltm_bignum_zero(VALUE self);
+extern VALUE ltm_prime_num_miller_rabin_trials(VALUE self, VALUE other);
+extern VALUE ltm_prime_random_of_size(int argc, VALUE* argv, VALUE self);
 
 /** Prime **/
 

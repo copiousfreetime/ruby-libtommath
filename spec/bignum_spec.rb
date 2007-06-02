@@ -1,6 +1,11 @@
 require 'libtom/math'
 
 describe LibTom::Math::Bignum, "instantiations" do 
+    it "should be instantiatable form Bignum()" do
+        b = LibTom::Math::Bignum(12345)
+        b.class.should == LibTom::Math::Bignum
+    end
+
     it "should instantiate from a string" do 
         b = LibTom::Math::Bignum.new("12345"*10)
         b.class.should == LibTom::Math::Bignum
@@ -474,7 +479,7 @@ describe LibTom::Math::Bignum, "Bonus methods" do
     end
 
     it "should generate random numbers with minimum bit length" do
-        p = LibTom::Math::rand_of_size(1024)
+        p = LibTom::Math::Bignum.random_of_size(1024)
         p.num_bits.should >= 1024
     end
 
@@ -585,11 +590,6 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         a.should be_passes_miller_rabin(13)
     end
 
-    it "should say how many Miller-Rabin tests to run on a number" do
-        ap = LibTom::Math::Bignum.new(2**256-1)
-        ap.num_miller_rabin_trials.should == 16
-    end
-
     it "should detect if a number is prime within a miniscule probability" do
         a = 2**256 - 1
         ap = LibTom::Math::Bignum.new(a)
@@ -606,42 +606,4 @@ describe LibTom::Math::Bignum, "Prime Number Methods" do
         a = LibTom::Math::Bignum.new(104729)
         lambda{ a.next_prime({ :trials => -1 }) }.should raise_error(ArgumentError)
     end
-   
-    it "should find the 1,000,001th prime" do
-        a = LibTom::Math::Bignum.new(15485863)
-        a.next_prime.should == 15485867
-    end
-
-    it "should find the first 1,000 primes" do
-        require 'mathn'
-        a = LibTom::Math::Bignum.new(1) 
-        p = Prime.new
-        p_list = []
-        a_list = []
-        1_000.times do 
-            a_list << a = a.next_prime
-            p_list << p.succ
-        end
-        a_list.should == p_list
-    end 
-
-    it "should raise an exception if the number of bits is not given when generating a random prime" do
-        lambda { LibTom::Math::random_prime }.should raise_error(ArgumentError)
-    end
-
-    it "should generate a random prime of a minimum bitsize" do
-        rp = LibTom::Math::random_prime(256)
-        rp.num_bits.should >= 256 
-        rp.should be_is_prime
-    end
-
-    it "should generate primes according to parameters" do
-        options = { :congruency => true,
-                    :msb => true,
-                    :safe => true }
-        rp = LibTom::Math::random_prime(256, options)
-        (rp % 4).should == 3 
-        ((rp - 1)/2).should be_is_prime
-    end
-
 end
