@@ -17,7 +17,7 @@ SPEC = Gem::Specification.new do |s|
    multiple-precision integer library.
    DESC
 
-   s.extensions         = "ext/libtom/math/extconf.rb"
+   s.extensions         = "ext/libtom/ext/extconf.rb"
    s.extra_rdoc_files   = FileList["README", "LICENSE"]
    s.files              = FileList["ext/**/*", "lib/**/*", "spec/**/*","examples/**/*"]
    s.has_rdoc           = true
@@ -28,6 +28,7 @@ SPEC = Gem::Specification.new do |s|
    s.requirements       = "LibTomMath version 0.41 or greater"
    s.rubyforge_project  = "copiousfreetime"
    s.version            = Gem::Version.create("0.7.0")
+
 end
 
 rd = Rake::RDocTask.new do |rdoc|
@@ -48,7 +49,7 @@ task :install_gem => [:clobber, :package] do
 end
 
 desc "Dump gemspec"
-task :spec do
+task :gemspec do
     puts SPEC.to_ruby
 end
 
