@@ -27,7 +27,7 @@ SPEC = Gem::Specification.new do |s|
     s.require_paths      << "ext"
     s.requirements       = "LibTomMath version 0.41 or greater"
     s.rubyforge_project  = "copiousfreetime"
-    s.version            = Gem::Version.create("0.7.0")
+    s.version            = Gem::Version.create("0.0.1")
     s.add_dependency('mkrf')
 end
 
