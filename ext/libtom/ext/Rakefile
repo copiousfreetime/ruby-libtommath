@@ -18,7 +18,7 @@ INCLUDES = "-I/usr/include -I/usr/lib/ruby/1.8/i386-linux -I/usr/lib/ruby/site_r
 
 LIBS = "-lpthread -ldl -lcrypt -lm -ltommath"
 
-CFLAGS = " -fPIC -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m32 -march=i386 -mtune=generic -fasynchronous-unwind-tables -Wall  -fPIC  -DHAVE_TOMMATH_H"
+CFLAGS = " -fPIC -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m32 -march=i386 -mtune=generic -fasynchronous-unwind-tables -Wall  -fPIC  "
 
 RUBYARCHDIR = "#{ENV["RUBYARCHDIR"]}"
 LIBRUBYARG_SHARED = "-lruby"

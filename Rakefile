@@ -47,7 +47,8 @@ task :default => :spec
 
 desc "Build the extension"
 ext = namespace :extension do 
-    task :build => [:package] do
+    #task :build => [:package] do
+    task :build do
         SPEC.extensions.each do |extension|
             path = Pathname.new(extension)
             parts = path.split
