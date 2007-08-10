@@ -9,6 +9,7 @@
 
 /* Class */
 VALUE cLT_M_Prime;
+extern VALUE eLT_M_Error;
 
 /*
  * call-seq:

@@ -1,10 +1,10 @@
 #include "ltm.h"
 
 /* Module and Class */
-VALUE mLT;
-VALUE mLT_M;
+extern VALUE mLT;
+extern VALUE mLT_M;
 VALUE cLT_M_Bignum;
-VALUE eLT_M_Error;
+extern VALUE eLT_M_Error;
 VALUE ltm_bignum_alloc(VALUE);
 
 /**********************************************************************

@@ -1,5 +1,6 @@
 require 'libtom/math/bignum'
 require 'libtom/math/prime'
+require 'libtom/math/gemspec'
 
 #
 # = LibTom
