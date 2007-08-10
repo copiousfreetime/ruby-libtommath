@@ -38,7 +38,7 @@ module LibTom
                     
                     
                     # add dependencies
-                    spec.add_dependency("mkrf", ">= 0.4.2")
+                    spec.add_dependency("mkrf")
                 
                     spec.platform           = Gem::Platform::RUBY
 
