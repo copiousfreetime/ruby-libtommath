@@ -67,3 +67,13 @@ namespace :dist do
     task :reinstall => [:install, :uninstall]
 
 end
+
+#-----------------------------------------------------------------------
+# update the top level clobber task to depend on all possible sub-level
+# tasks that have a name like ':clobber'  in other namespaces
+#-----------------------------------------------------------------------
+Rake.application.tasks.each do |t| 
+    if t.name =~ /:clobber/ then
+        task :clobber => [t.name]
+    end 
+end
