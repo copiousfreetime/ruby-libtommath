@@ -21,7 +21,9 @@ VALUE ltm_bignum_random_of_size(VALUE self, VALUE other)
     VALUE result    = ALLOC_LTM_BIGNUM;
     mp_int *a       = MP_INT(result);
     double num_bits = NUM2DBL(other);
-    int num_digits  = (int)ceil(num_bits / MP_DIGIT_BIT);
+
+	/* Add an extra digit on here since on OSX it seems to make 1023 bit number out of this */
+    int num_digits  = (int)ceil(num_bits / MP_DIGIT_BIT) + 1;
     int mp_result;
 
     if (MP_OKAY != (mp_result = mp_rand(a,num_digits))) {
