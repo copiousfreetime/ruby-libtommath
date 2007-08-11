@@ -2,6 +2,8 @@ require 'rubygems'
 require 'rake/gempackagetask'
 require 'rake/clean'
 require 'rake/rdoctask'
+require 'rake/contrib/sshpublisher'
+
 
 $: << File.join(File.dirname(__FILE__),"lib")
 $: << File.join(File.dirname(__FILE__),"ext")
@@ -65,6 +67,14 @@ namespace :dist do
 
     desc "reinstall gem"
     task :reinstall => [:install, :uninstall]
+    
+    desc "distribute copiously"
+    task :copious => [:package] do
+        Rake::SshFilePublisher.new('jeremy@copiousfreetime.org',
+                               '/var/www/vhosts/www.copiousfreetime.org/htdocs/gems/gems',
+                               'pkg',"#{LibTom::Math::SPEC.full_name}.gem").upload
+        sh "ssh jeremy@copiousfreetime.org rake -f /var/www/vhosts/www.copiousfreetime.org/htdocs/gems/Rakefile"
+    end
 
 end
 
