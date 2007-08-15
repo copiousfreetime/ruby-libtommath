@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+
+top_level = File.expand_path(File.join(File.dirname(__FILE__),".."))
+$: << File.join(top_level,"lib")
+$: << File.join(top_level,"ext")
+
+require 'libtom/math'
+require 'mathn'
+
+
+require 'benchmark'
+
+num_bits = ARGV.shift.to_i
+
+puts "Generating big number with ~#{num_bits} bits"
+big = LibTom::Math::Bignum::random_of_size(num_bits)
+puts "Number of bits  : #{big.num_bits}"
+puts "Number of digits: #{big.to_s.size}"
+print "Is it prime?    : "
+if big.is_prime? then
+    puts "true"
+else
+    puts "false"
+    puts "Finding first prime after number..."
+    prime = big.next_prime
+end
+
+puts "The number...."
+puts
+puts big
+
+puts
+puts "Its next prime..."
+puts
+puts prime
+
+puts 
+puts "Difference between prime and number : #{prime - big}"
+

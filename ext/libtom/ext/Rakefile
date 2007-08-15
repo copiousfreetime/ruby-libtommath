@@ -2,7 +2,7 @@
 require 'rake/clean'
 
 CLEAN.include('*.o')
-CLOBBER.include('math.so', 'mkrf.log')
+CLOBBER.include('math.bundle', 'mkrf.log')
 
 SRC = FileList['*.c']
 OBJ = SRC.ext('o')
@@ -10,34 +10,34 @@ CC = 'gcc'
 
 ADDITIONAL_OBJECTS = ''
 
-LDSHARED = "gcc -shared "
+LDSHARED = "cc -dynamic -bundle -undefined suppress -flat_namespace "
 
-LIBPATH =  "-L/usr/lib -L/opt/local/lib"
+LIBPATH =  "-L/opt/local/lib -L/opt/local/lib"
 
-INCLUDES = "-I/usr/include -I/usr/lib/ruby/1.8/i386-linux -I/usr/lib/ruby/site_ruby/1.8 -I. -I/usr/include/tommath"
+INCLUDES = "-I/opt/local/lib/ruby/1.8/i686-darwin8.9.1 -I/opt/local/lib/ruby/site_ruby/1.8 -I. -I/opt/local/include/libtommath"
 
-LIBS = "-lpthread -ldl -lcrypt -lm -ltommath"
+LIBS = "-lpthread -ldl -lobjc -ltommath"
 
-CFLAGS = " -fPIC -O2 -g -pipe -Wall -Wp,-D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector --param=ssp-buffer-size=4 -m32 -march=i386 -mtune=generic -fasynchronous-unwind-tables -Wall  -fPIC  -DHAVE_TOMMATH_H"
+CFLAGS = " -fno-common -O -pipe -I/opt/local/include  -fno-common -pipe -fno-common  -DHAVE_TOMMATH_H"
 
 RUBYARCHDIR = "#{ENV["RUBYARCHDIR"]}"
 LIBRUBYARG_SHARED = "-lruby"
 
-task :default => ['math.so']
+task :default => ['math.bundle']
 
 rule '.o' => '.c' do |t|
   sh "#{CC} #{CFLAGS} #{INCLUDES} -c #{t.source}"
 end
 
 desc "Build this extension"
-file 'math.so' => OBJ do
-  sh "#{LDSHARED} #{LIBPATH} -o math.so #{OBJ} #{ADDITIONAL_OBJECTS} #{LIBS} #{LIBRUBYARG_SHARED}"
+file 'math.bundle' => OBJ do
+  sh "#{LDSHARED} #{LIBPATH} -o math.bundle #{OBJ} #{ADDITIONAL_OBJECTS} #{LIBS} #{LIBRUBYARG_SHARED}"
 end
 
 desc "Install this extension"
-task :install => 'math.so' do
+task :install => 'math.bundle' do
   makedirs "#{RUBYARCHDIR}"
-  install "math.so", "#{RUBYARCHDIR}"
+  install "math.bundle", "#{RUBYARCHDIR}"
 end
 
 
