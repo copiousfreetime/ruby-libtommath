@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'mkrf'
+puts 
 Mkrf::Generator.new('math') do |g|
     LIB_PATHS = %w[ /opt/local/lib ]
     
