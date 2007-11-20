@@ -2,8 +2,8 @@ module LibTom
     module Math
         class Version
             MAJOR   = 0
-            MINOR   = 0
-            BUILD   = 1
+            MINOR   = 41
+            BUILD   = 0
 
             class << self
                 def to_a
