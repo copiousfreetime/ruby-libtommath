@@ -8,12 +8,14 @@ require 'libtom/math'
 require 'mathn'
 require 'benchmark'
 
-n = ARGV.shift.to_i
+n = (ARGV.shift || 5000).to_i
 
 mathn_prime = Prime.new
 tom_prime   = LibTom::Math::Prime.new
 
+puts "Compare Mathn Prime generation speed vs. LibTom::Math::Prime speed"
+puts
 Benchmark.bm(25) do |x|
-    x.report("Mathn  #{n} primes") { n.times { mathn_prime.succ } }
-    x.report("LibTom #{n} primes") { n.times { tom_prime.succ   } }
+    x.report("Mathn  first #{n} primes") { n.times { mathn_prime.succ } }
+    x.report("LibTom first #{n} primes") { n.times { tom_prime.succ   } }
 end

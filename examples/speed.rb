@@ -22,7 +22,6 @@ ruby_results = []
 
 puts "Comparing Ruby ::Bignum with LibTom::Math::Bignum over #{number} #{bitsize} bit numbers"
 puts
-puts
 
 Benchmark.bm(25) do |x|
     x.report("Ruby   GCD") do 

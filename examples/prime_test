@@ -12,15 +12,16 @@ require 'benchmark'
 
 num_bits = ARGV.shift.to_i
 
-puts "Generating big number with ~#{num_bits} bits"
+puts "Generating big number with approximately #{num_bits} bits"
+puts 
 big = LibTom::Math::Bignum::random_of_size(num_bits)
-puts "Number of bits  : #{big.num_bits}"
-puts "Number of digits: #{big.to_s.size}"
-print "Is it prime?    : "
+puts  "Number of bits        : #{big.num_bits}"
+puts  "Number of digits      : #{big.to_s.size}"
+print "Is it prime?          :"
 if big.is_prime? then
-    puts "true"
+    puts "yes"
 else
-    puts "false"
+    puts "no"
     puts "Finding first prime after number..."
     prime = big.next_prime
 end
