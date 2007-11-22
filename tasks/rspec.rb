@@ -11,7 +11,7 @@ namespace :test do
         r.rcov      = true
         r.rcov_dir  = LibTom::Math::SPEC.local_coverage_dir
         r.libs      = LibTom::Math::SPEC.require_paths
-        r.spec_opts = %w(--format specdoc)
+        r.spec_opts = %w(--format specdoc --color)
     end
 
     task :spec => [ "extension:build"]

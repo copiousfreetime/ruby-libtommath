@@ -33,15 +33,13 @@ module LibTom
                                               FileList["lib/**/*.rb", "examples/**/*","ext/**/*"]
                 
                     spec.extensions         << "ext/libtom/ext/mkrf_conf.rb"
-                    spec.requirements       = "LibTomMath version 0.40 or greater"
                     spec.require_paths      << "ext"
                     
                     
                     # add dependencies
                     spec.add_dependency("mkrf", ">= 0.2.2")
-                
                     spec.platform           = Gem::Platform::RUBY
-
+                
                     spec.local_rdoc_dir     = "doc/rdoc"
                     spec.remote_rdoc_dir    = ""
                     spec.local_coverage_dir = "doc/coverage"
