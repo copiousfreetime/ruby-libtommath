@@ -123,6 +123,7 @@ module LibTom
 
             # we delegate any other calls to spec
             def method_missing(method_id,*params,&block)
+                puts "sending #{method_id} #{params.first}"
                 @spec.send method_id, *params, &block
             end
         end
