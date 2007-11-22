@@ -1,16 +1,30 @@
-== libtommath
+== ruby-libtommath
 
-* Homepage
-* rubyforge project
-* email
+* Homepage[http://copiousfreetime.rubyforge.org/ruby-libtommath/]
+* {Rubyforge Project}[http://rubyforge.org/projects/copiousfreetime/]
+* email jeremy at hinegardner dot org
 
 == DESCRIPTION
 
-== FEATURES
+ruby-libtommath is an extension which includes the {LibTomMath}[http://libtom.org/?page=features&newsitems=5&whatfile=ltm]
+free open source portable number theoretic multiple-precision integer library.
 
-== SYNOPSIS
+Yes, the libtommath library is included directly in the extension, 
+no need for the external library.
+
+An ALMOST drop in replacement for the built in ruby Bignum.
+Overall the LibTomMath library is faster, can handler larger
+numbers and has more features than the built in ruby Bignum.  
+There are a few slight differences in behavior and those are documented 
+in the LibTom::Math::Bignum class.
+
+See the LibTom::Math, LibTom::Math::Bignum and LibTom::Math::Prime 
+sections for more information.
 
 == CREDITS
+
+All the credit goes to Tom St. Denis for creating the {LibTom}[http://libtom.org] 
+projects in the first place.
 
 == LICENSE
 

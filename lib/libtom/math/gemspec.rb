@@ -23,7 +23,7 @@ module LibTom
                     Bignum.
                     DESC
 
-                    spec.extra_rdoc_files   = FileList["[A-Z]*"]
+                    spec.extra_rdoc_files   = FileList["README", "CHANGES", "LICENSE"]
                     spec.has_rdoc           = true
                     spec.rdoc_main          = "README"
                     spec.rdoc_options       = [ "--line-numbers" , "--inline-source" ]

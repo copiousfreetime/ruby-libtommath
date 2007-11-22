@@ -30,9 +30,8 @@ module LibTom
         # == Hmm, it must be missing something then.
         # 
         # Yes, LibTom::Math::Bignum does not behave in the exact same
-        # way that Ruby's Bignum behaves. 
-        #
-        # LibTom::Math::Bignum :
+        # way that Ruby's Bignum behaves. These are the only ways in which
+        # LibTom::Math::Bignum differes from Ruby's Bignum
         #
         # * Does not implement [] to provide "bit vector" style access.
         # * Does not implement ~ to provide bitwise negation.
