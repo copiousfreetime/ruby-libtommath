@@ -48,6 +48,8 @@ namespace :dist do
         pkg.need_tar = LibTom::Math::SPEC.need_tar
         pkg.need_zip = LibTom::Math::SPEC.need_zip
     end
+    
+    task :package => [ ":extension:prepare" ]
 
     desc "Install as a gem"
     task :install => [:clobber, :package] do
