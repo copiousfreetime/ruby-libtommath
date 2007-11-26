@@ -30,7 +30,7 @@ module LibTom
 
                     spec.test_files         = FileList["spec/**/*.rb", "test/**/*.rb"]
                     spec.files              = spec.test_files + spec.extra_rdoc_files + 
-                                              FileList["lib/**/*.rb", "examples/**/*","ext/**/*"]
+                                              FileList["setup.rb", "lib/**/*.rb", "examples/**/*","ext/**/*"]
                 
                     spec.extensions         << "ext/libtom/ext/mkrf_conf.rb"
                     spec.require_paths      << "ext"
