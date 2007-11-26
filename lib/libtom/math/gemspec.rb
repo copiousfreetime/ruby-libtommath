@@ -12,7 +12,7 @@ module LibTom
                     spec.rubyforge_project  = "copiousfreetime"
                     spec.author             = "Jeremy Hinegardner"
                     spec.email              = "jeremy@hinegardner.org"
-                    spec.homepage           = "http://copiousfreetime.rubyforge.org/libtommath/"
+                    spec.homepage           = "http://copiousfreetime.rubyforge.org/ruby-libtommath/"
 
                     spec.summary            = "Ruby extension for LibTom Math"
                     spec.description        = <<-DESC
