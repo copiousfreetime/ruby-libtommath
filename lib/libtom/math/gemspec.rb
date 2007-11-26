@@ -33,7 +33,7 @@ module LibTom
                                               FileList["setup.rb", "lib/**/*.rb", "examples/**/*","ext/**/*"]
                 
                     spec.extensions         << "ext/libtom/mkrf_conf.rb"
-                    spec.require_paths      << "ext"
+                    spec.require_paths      << "ext/libtom"
                     
                     
                     # add dependencies
