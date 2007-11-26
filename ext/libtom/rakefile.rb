@@ -15,7 +15,9 @@ ERROR! RubyGems version #{Gem::RubyGemsVersion} is not capable of installing
 ERROR! gems that use mkrf for building extensions.  
 ERROR! 
 ERROR! You can either upgrade to at least rubygems 0.9.5 or install via the
-ERROR! .tgz or .zip file found at http://rubyforge.org/frs/?group_id=3707
+ERROR! ruby-libtommath .tgz or .zip file found on rubyforge.
+ERROR!   
+ERROR!        http://rubyforge.org/frs/?group_id=3707
 ERROR!
 #{'ERROR! ' * 10} 
 
