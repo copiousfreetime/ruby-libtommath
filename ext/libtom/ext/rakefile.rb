@@ -1,7 +1,7 @@
 # this is a stub rakefile to print out useful information for those that
 # are on rubygems < 0.9.5.  This rakefile.rb has a lower order of
 # precidence than Rakefile so this will be executed by rubygems < 0.9.5
-# and the companion mkrf_conf will be executed by rubygems >= 0.9.5
+# and the companion mkrf_conf.rb will be executed by rubygems >= 0.9.5
 
 require 'rubygems/installer'
 
@@ -12,7 +12,10 @@ task :extension do
 #{'ERROR! ' * 10} 
 ERROR!
 ERROR! RubyGems version #{Gem::RubyGemsVersion} is not capable of installing 
-ERROR! this gem.  Please upgrade to at least version 0.9.5
+ERROR! gems that use mkrf for building extensions.  
+ERROR! 
+ERROR! You can either upgrade to at least rubygems 0.9.5 or install via the
+ERROR! .tgz or .zip file found at http://rubyforge.org/frs/?group_id=3707
 ERROR!
 #{'ERROR! ' * 10} 
 

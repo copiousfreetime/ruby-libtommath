@@ -45,4 +45,4 @@
 \.swp$
 email.txt
 \.so$
-
+\.config$
