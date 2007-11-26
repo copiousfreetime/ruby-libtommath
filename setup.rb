@@ -1360,6 +1360,7 @@ class Installer
   end
 
   def install_dir_ext(rel)
+    puts "test installing of #{rel} from #{curr_srcdir()} with #{File.dirname(rel)}"
     return unless extdir?(curr_srcdir())
     install_files rubyextentions('.'),
                   "#{config('sodir')}/#{File.dirname(rel)}",

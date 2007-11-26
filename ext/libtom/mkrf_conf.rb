@@ -1,5 +1,5 @@
 require 'rubygems'
 require 'mkrf'
-Mkrf::Generator.new('math_ext') do |g|
+Mkrf::Generator.new('libtommath') do |g|
     # completely self contained, defaults work great.
 end

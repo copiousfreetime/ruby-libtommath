@@ -2,7 +2,7 @@
 
 top_level = File.expand_path(File.join(File.dirname(__FILE__),".."))
 $: << File.join(top_level,"lib")
-$: << File.join(top_level,"ext")
+$: << File.join(top_level,"ext/libtom")
 
 require 'libtom/math'
 require 'mathn'

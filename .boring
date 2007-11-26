@@ -39,10 +39,11 @@
 ^pkg/*
 ^log/*
 ^ext/libtom/Rakefile
-^ext/libtom/math_ext.bundle
+^ext/libtom/libtommath.bundle
 \.log$
 \.swo$
 \.swp$
 email.txt
 \.so$
 \.config$
+InstalledFiles

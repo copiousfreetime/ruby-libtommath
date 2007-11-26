@@ -45,7 +45,7 @@ static VALUE ltm_two_to_the(VALUE self, VALUE other)
  * free open source portable number theoretic multiple-precision integer
  * library
  */
-void Init_math_ext()
+void Init_libtommath()
 {
 
     /*
