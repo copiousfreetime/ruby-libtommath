@@ -71,10 +71,15 @@ namespace :dist do
     
     desc "distribute copiously"
     task :copious => [:package] do
-        Rake::SshFilePublisher.new('jeremy@copiousfreetime.org',
+        require 'socket'
+        hostname = 'copiousfreetime.org'
+        if Socket.gethostname == 'planchet.hinegardner.org' then
+            hostname = 'localhost'
+        end
+        Rake::SshFilePublisher.new("jeremy@#{hostname}",
                                '/var/www/vhosts/www.copiousfreetime.org/htdocs/gems/gems',
                                'pkg',"#{LibTom::Math::SPEC.full_name}.gem").upload
-        sh "ssh jeremy@copiousfreetime.org rake -f /var/www/vhosts/www.copiousfreetime.org/htdocs/gems/Rakefile"
+        sh "ssh jeremy@#{hostname} rake -f /var/www/vhosts/www.copiousfreetime.org/htdocs/gems/Rakefile"
     end
 
 end
