@@ -38,8 +38,8 @@
 ^doc\/*
 ^pkg/*
 ^log/*
-^ext/libtom/ext/Rakefile
-^ext/libtom/ext/math.bundle
+^ext/libtom/Rakefile
+^ext/libtom/math_ext.bundle
 \.log$
 \.swo$
 \.swp$

@@ -1,4 +1,4 @@
-require 'libtom/ext/math'
+require 'libtom/math_ext'
 module LibTom
     module Math
         #
