@@ -38,7 +38,7 @@ namespace :extension do
  *********************************************************************
  *********************************************************************/
 EOH
-            src_files.each do |dot_c|
+            src_files.sort.each do |dot_c|
                 all.puts
                 all.puts "/*" + "-" * 70
                 all.puts " -- Start: #{dot_c}"
