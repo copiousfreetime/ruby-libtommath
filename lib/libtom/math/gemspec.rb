@@ -30,7 +30,7 @@ module LibTom
 
                     spec.test_files         = FileList["spec/**/*.rb", "test/**/*.rb"]
                     spec.files              = spec.test_files + spec.extra_rdoc_files + 
-                                              FileList["setup.rb", "lib/**/*.rb", "examples/**/*","ext/**/*"]
+                                              FileList["setup.rb", "lib/**/*.rb", "examples/**/*","ext/**/*"] - FileList["ext/**/*.o"]
                 
                     spec.extensions         << "ext/libtom/mkrf_conf.rb"
                     spec.require_paths      << "ext/libtom"
@@ -40,7 +40,7 @@ module LibTom
                     spec.add_dependency("mkrf", ">= 0.2.2")
 
                     spec.platform           = Gem::Platform::RUBY
-                    #spec.required_rubygems_version = ">= 0.9.5"
+                    spec.required_rubygems_version = ">= 0.9.5"
                 
                     spec.local_rdoc_dir     = "doc/rdoc"
                     spec.remote_rdoc_dir    = ""
