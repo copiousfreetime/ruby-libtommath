@@ -42,10 +42,10 @@ module LibTom
                     spec.platform           = Gem::Platform::RUBY
                     spec.required_rubygems_version = ">= 0.9.5"
                 
+                    spec.remote_user        = "jjh"
                     spec.local_rdoc_dir     = "doc/rdoc"
                     spec.remote_rdoc_dir    = ""
                     spec.local_coverage_dir = "doc/coverage"
-                    spec.remote_coverage_dir= "coverage"
 
                     spec.remote_site_dir    = "#{spec.name}/"
 

@@ -49,7 +49,6 @@ namespace :dist do
         pkg.need_zip = LibTom::Math::SPEC.need_zip
     end
     
-    
     desc "Install as a gem"
     task :install => [:clobber, :package] do
         sh "sudo gem install pkg/#{LibTom::Math::SPEC.full_name}.gem"
